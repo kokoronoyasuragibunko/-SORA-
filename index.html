@@ -58,7 +58,31 @@
     </style>
 </head>
 <body>
+<script>
+  // --- ここからパスワード制限のコード ---
+  (function(){
+    var password = "soraapp"; // ←ここを好きなパスワードに変えてください
+    var key = "sora_app_lock"; // 合言葉を保存する名前
+    
+    // すでに合言葉を入れてあるか確認
+    if (localStorage.getItem(key) === password) {
+      return; // 合っていれば何もしない（アプリを表示）
+    }
 
+    // パスワードを聞く
+    var input = prompt("SORAアプリを開くためのパスワードを入力してください:");
+
+    if (input === password) {
+      // 正解なら保存してアプリを表示
+      localStorage.setItem(key, password);
+    } else {
+      // 不正解なら画面を真っ白にして拒否
+      document.body.innerHTML = '<h2 style="text-align:center; margin-top:50px;">パスワードが違います<br>再読み込みしてください</h2>';
+      throw new Error("パスワード違いにより停止");
+    }
+  })();
+  // --- ここまで ---
+</script>
 <div class="container py-3" style="max-width: 600px;">
     <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
 
