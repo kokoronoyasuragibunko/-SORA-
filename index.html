@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SORA法 アプリ</title>
+    <link rel="manifest" href="manifest.json">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <meta name="theme-color" content="#f0f4f8">
+    <style>
+        body { background-color: #fcfcfc; font-family: "Helvetica Neue", Arial, sans-serif; user-select: none; padding-bottom: 50px; }
+        
+        .timer-card { 
+            background: white; 
+            border-radius: 20px; 
+            padding: 25px 15px; 
+            box-shadow: 0 8px 15px rgba(0,100,255,0.1); 
+            margin-bottom: 25px; 
+            text-align: center; 
+            border: 1px solid #e1e8ed;
+        }
+
+        .timer-display { 
+            font-size: 2.5rem; 
+            font-weight: 900; 
+            color: #0d6efd; 
+            font-variant-numeric: tabular-nums; 
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            margin: 5px 0;
+            line-height: 1.2;
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.05);
+        }
+
+        .timer-label { font-size: 1.0rem; color: #555; font-weight: bold; }
+
+        .prev-record-box {
+            background-color: #f0fff4; 
+            border: 2px solid #b2f5ea;
+            border-radius: 10px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+        .prev-record-label { font-size: 0.85rem; color: #2d3748; font-weight: bold; }
+        .prev-record-value { font-size: 1.3rem; color: #198754; font-weight: 800; }
+
+        .btn-custom { width: 100%; margin-bottom: 12px; padding: 15px; font-weight: bold; border-radius: 12px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .btn-amulet { background-color: #6f42c1; color: white; border: none; }
+        .btn-amulet:hover { background-color: #59359a; color: white; }
+
+        .history-section { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .table-responsive { font-size: 0.85rem; }
+        
+        .date-input-group { background: #e9ecef; padding: 10px; border-radius: 10px; margin-bottom: 20px; }
+
+        .result-success { color: #dc3545; font-weight: bold; } /* 赤字 */
+        .result-fail { color: #0d6efd; font-weight: bold; } /* 青字 */
+    </style>
+</head>
+<body>
+
+<div class="container py-3" style="max-width: 600px;">
+    <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
+
+    <div class="timer-card">
+        <p class="timer-label mb-0">嘔吐していない連続時間</p>
+        <div id="timerDisplay" class="timer-display">0日 0時間 0分 0秒</div>
+        
+        <div class="prev-record-box">
+            <div class="prev-record-label">🏆 前回の我慢記録</div>
+            <div id="lastDurationDisplay" class="prev-record-value">（未計測）</div>
+        </div>
+    </div>
+
+    <div class="mb-5">
+        <div class="date-input-group">
+            <label class="date-input-label" style="font-size:0.8rem; color:#666;">🕒 過去の時間を入力する場合はここを設定</label>
+            <input type="datetime-local" id="manualTimeInput" class="form-control">
+        </div>
+
+        <div class="row g-2">
+            <div class="col-12">
+                <button id="btnStart" class="btn btn-primary btn-custom" onclick="logEvent('SORA法開始')">🚀 SORA法開始</button>
+            </div>
+            
+            <div class="col-6">
+                <button id="btnMeal" class="btn btn-success btn-custom" onclick="logEvent('食事')" disabled>🍽️ 食事</button>
+            </div>
+            <div class="col-6">
+                <button id="btnVomit" class="btn btn-danger btn-custom" onclick="logEvent('嘔吐')" disabled>⚠️ 嘔吐</button>
+            </div>
+
+            <div class="col-12">
+                <a href="recovery_amulet.html" class="btn btn-amulet btn-custom">🛡️ リカバリーアミュレット</a>
+            </div>
+
+            <div class="col-12">
+                <button class="btn btn-secondary btn-custom" style="font-size: 0.9rem; background-color:#95a5a6; border:none;" onclick="resetSora()">🔄 SORAをやり直す (全消去)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-section">
+        <h6 class="mb-3 fw-bold">📝 記録ログ</h6>
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th style="width:15%">成果</th>
+                        <th style="width:25%">日時</th>
+                        <th style="width:20%">出来事</th>
+                        <th style="width:25%">耐えた時間</th>
+                        <th style="width:15%">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="logTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">記録の編集</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId">
+        <div class="mb-3">
+            <label class="form-label">日時</label>
+            <input type="datetime-local" id="editTime" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label class="form-label">出来事</label>
+            <select id="editEvent" class="form-select">
+                <option value="SORA法開始">SORA法開始</option>
+                <option value="食事">食事</option>
+                <option value="嘔吐">嘔吐</option>
+            </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+        <button type="button" class="btn btn-primary" onclick="saveEdit()">保存する</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(console.error);
+    }
+
+    // データ構造: { id, timestamp, event, result, durationStr, durationMs }
+    // durationMs: 計算用のミリ秒（正確な合計のため）
+    let soraData = JSON.parse(localStorage.getItem('soraData')) || [];
+    let editModalInstance;
+
+    window.onload = function() {
+        editModalInstance = new bootstrap.Modal(document.getElementById('editModal'));
+        
+        // 初回ロード時: 一旦リセット
+        document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
+        
+        updateButtonState();
+        renderTable();
+        // 計算して時計を動かす
+        updateTimer();
+        setInterval(updateTimer, 1000);
+    };
+
+    function logEvent(eventName) {
+        const manualInput = document.getElementById('manualTimeInput').value;
+        const now = manualInput ? new Date(manualInput) : new Date();
+
+        // 時計を一旦リセット（視覚的な要件）
+        document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
+
+        const newEntry = {
+            id: generateId(),
+            timestamp: now.getTime(),
+            event: eventName,
+            result: "",
+            durationStr: "-",
+            durationMs: 0
+        };
+
+        soraData.unshift(newEntry);
+        soraData.sort((a, b) => b.timestamp - a.timestamp);
+
+        // ログの整合性を計算
+        recalculateAllLogs();
+        
+        saveData();
+        document.getElementById('manualTimeInput').value = '';
+        updateButtonState();
+        renderTable();
+        
+        // 時計計算・再開
+        updateTimer();
+    }
+
+    function generateId() {
+        if(soraData.length === 0) return 1;
+        const maxId = Math.max(...soraData.map(d => d.id));
+        return maxId + 1;
+    }
+
+    // ログ全体を再計算（成果、時間、ミリ秒）
+    function recalculateAllLogs() {
+        // 時系列順（古い順）にする
+        const orderedData = [...soraData].reverse();
+        
+        soraData.forEach(d => {
+            d.result = "";
+            d.durationStr = "-";
+            d.durationMs = 0;
+        });
+
+        for (let i = 0; i < orderedData.length; i++) {
+            const current = orderedData[i];
+            const next = orderedData[i + 1];
+
+            if (current.event === '食事') {
+                if (next) {
+                    // 次のイベントまでの時間を計算
+                    const diffMs = next.timestamp - current.timestamp;
+                    const diffStr = calculateDiff(current.timestamp, next.timestamp); // 秒あり文字列
+
+                    if (next.event === '食事') {
+                        current.durationMs = diffMs;
+                        current.durationStr = diffStr;
+                        current.result = '<span class="result-success">達成！</span>';
+                    } else if (next.event === '嘔吐') {
+                        current.durationMs = diffMs;
+                        current.durationStr = diffStr;
+                        current.result = '<span class="result-fail">×</span>';
+                    }
+                }
+            }
+        }
+    }
+
+    // テーブル描画
+    function renderTable() {
+        const tbody = document.getElementById('logTableBody');
+        tbody.innerHTML = "";
+
+        soraData.forEach((row) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${row.result || ''}</td>
+                <td>${formatDate(new Date(row.timestamp))}</td>
+                <td>${row.event}</td>
+                <td style="font-weight:bold;">${row.durationStr}</td>
+                <td><button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${row.id})">編集</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 時計更新ロジック（合計計算）
+    function updateTimer() {
+        const now = new Date();
+        const display = document.getElementById('timerDisplay');
+        const lastDurationDisplay = document.getElementById('lastDurationDisplay');
+
+        if (soraData.length === 0) {
+            display.textContent = "0日 0時間 0分 0秒";
+            lastDurationDisplay.textContent = "（未計測）";
+            return;
+        }
+
+        // 1. 最新の「嘔吐」を探す
+        // soraDataは新しい順
+        let latestVomitIndex = -1;
+        for (let i = 0; i < soraData.length; i++) {
+            if (soraData[i].event === '嘔吐') {
+                latestVomitIndex = i;
+                break;
+            }
+        }
+
+        // 2. それより先の（新しい）「食事」行の「耐えた時間(durationMs)」を合計する
+        // 嘔吐がない場合は全てのデータを対象にする
+        let totalEnduredMs = 0;
+        
+        // 嘔吐が見つかったらその手前まで、見つからなければ最後まで
+        const limitIndex = (latestVomitIndex === -1) ? soraData.length : latestVomitIndex;
+
+        for (let i = 0; i < limitIndex; i++) {
+            const row = soraData[i];
+            // 「食事」かつ、成果が出ている（durationMs > 0）ものを足す
+            if (row.event === '食事' && row.durationMs > 0) {
+                totalEnduredMs += row.durationMs;
+            }
+        }
+
+        // 3. 最後に、現在進行形の時間（最新のイベントから現在まで）を足す
+        // ただし、最新のイベントが「嘔吐」ならカウントは0から（リセット直後）
+        // 最新のイベントが「食事」や「開始」ならその時間を足す
+        if (soraData.length > 0) {
+            const latestEvent = soraData[0];
+            if (latestEvent.event !== '嘔吐') {
+                const currentRunningMs = now.getTime() - latestEvent.timestamp;
+                if (currentRunningMs > 0) {
+                    totalEnduredMs += currentRunningMs;
+                }
+            }
+        }
+
+        // 4. 合計時間を表示
+        display.textContent = formatDuration(totalEnduredMs);
+
+
+        // --- 前回の我慢記録（表示ロジックは変更なし） ---
+        let prevDurationText = "記録なし";
+        const history = [...soraData].reverse();
+        const vomitEvents = history.filter(d => d.event === '嘔吐');
+
+        if (vomitEvents.length > 0) {
+            const lastVomit = vomitEvents[vomitEvents.length - 1];
+            const prevEvents = history.filter(d => 
+                d.timestamp < lastVomit.timestamp && (d.event === '嘔吐' || d.event === 'SORA法開始')
+            );
+            if (prevEvents.length > 0) {
+                const startPoint = prevEvents[prevEvents.length - 1];
+                prevDurationText = calculateDiff(startPoint.timestamp, lastVomit.timestamp);
+            }
+        }
+        lastDurationDisplay.textContent = prevDurationText;
+    }
+
+    // ミリ秒を ○日○時間○分○秒 文字列にする
+    function formatDuration(ms) {
+        const day = Math.floor(ms / (1000 * 60 * 60 * 24));
+        const hour = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const min = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+        const sec = Math.floor((ms % (1000 * 60)) / 1000);
+        return `${day}日 ${hour}時間 ${min}分 ${sec}秒`;
+    }
+
+    // 2点間の差分計算（秒まで表示）
+    function calculateDiff(startMs, endMs) {
+        let diff = endMs - startMs;
+        if (diff < 0) diff = 0;
+        return formatDuration(diff);
+    }
+
+    function saveData() {
+        localStorage.setItem('soraData', JSON.stringify(soraData));
+    }
+    
+    function updateButtonState() {
+        const hasData = soraData.length > 0;
+        document.getElementById('btnStart').disabled = hasData; 
+        document.getElementById('btnMeal').disabled = !hasData; 
+        document.getElementById('btnVomit').disabled = !hasData;
+    }
+
+    function openEdit(id) {
+        const target = soraData.find(d => d.id === id);
+        if(!target) return;
+        document.getElementById('editId').value = target.id;
+        document.getElementById('editEvent').value = target.event;
+        const date = new Date(target.timestamp);
+        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+        document.getElementById('editTime').value = date.toISOString().slice(0, 16);
+        editModalInstance.show();
+    }
+
+    function saveEdit() {
+        const id = parseInt(document.getElementById('editId').value);
+        const timeInput = document.getElementById('editTime').value;
+        const eventInput = document.getElementById('editEvent').value;
+        if(!timeInput) { alert("日時を入力してください"); return; }
+        
+        const targetIndex = soraData.findIndex(d => d.id === id);
+        if(targetIndex > -1) {
+            soraData[targetIndex].timestamp = new Date(timeInput).getTime();
+            soraData[targetIndex].event = eventInput;
+            
+            soraData.sort((a, b) => b.timestamp - a.timestamp);
+            recalculateAllLogs();
+            saveData();
+            
+            editModalInstance.hide();
+            renderTable();
+            updateTimer();
+        }
+    }
+
+    function resetSora() {
+        if(confirm("データを全て消去して、最初からやり直しますか？")) {
+            soraData = [];
+            localStorage.removeItem('soraData');
+            
+            // 時計リセット
+            document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
+            
+            updateButtonState();
+            renderTable();
+            updateTimer();
+        }
+    }
+
+    function formatDate(date) {
+        const M = ("0" + (date.getMonth() + 1)).slice(-2);
+        const d = ("0" + date.getDate()).slice(-2);
+        const h = ("0" + date.getHours()).slice(-2);
+        const m = ("0" + date.getMinutes()).slice(-2);
+        const s = ("0" + date.getSeconds()).slice(-2);
+        return `${M}/${d} ${h}:${m}:${s}`;
+    }
+</script>
+</body>
+</html>
