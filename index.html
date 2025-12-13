@@ -9,13 +9,13 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <meta name="theme-color" content="#f0f4f8">
     <style>
-        /* 重要：最初は画面を非表示にしておく */
+        /* 重要：最初は画面を非表示にしておく（パスワード用） */
         body { 
             background-color: #fcfcfc; 
             font-family: "Helvetica Neue", Arial, sans-serif; 
             user-select: none; 
             padding-bottom: 50px;
-            display: none; /* ←これが画面を隠す魔法です */
+            display: none; 
         }
         
         .timer-card { 
@@ -41,15 +41,32 @@
 
         .timer-label { font-size: 1.0rem; color: #555; font-weight: bold; }
 
+        /* 記録ボックスの共通スタイル */
+        .record-box {
+            border-radius: 10px;
+            padding: 10px;
+            height: 100%; /* 高さを揃える */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* 前回の記録（緑） */
         .prev-record-box {
             background-color: #f0fff4; 
             border: 2px solid #b2f5ea;
-            border-radius: 10px;
-            padding: 10px;
-            margin-top: 15px;
         }
-        .prev-record-label { font-size: 0.85rem; color: #2d3748; font-weight: bold; }
-        .prev-record-value { font-size: 1.3rem; color: #198754; font-weight: 800; }
+        .prev-record-label { font-size: 0.8rem; color: #2d3748; font-weight: bold; margin-bottom: 5px; }
+        .prev-record-value { font-size: 1.1rem; color: #198754; font-weight: 800; line-height: 1.2; }
+
+        /* 最長記録（金/オレンジ） */
+        .best-record-box {
+            background-color: #fffaf0; 
+            border: 2px solid #feebc8;
+        }
+        .best-record-label { font-size: 0.8rem; color: #744210; font-weight: bold; margin-bottom: 5px; }
+        .best-record-value { font-size: 1.1rem; color: #d69e2e; font-weight: 800; line-height: 1.2; }
+
 
         .btn-custom { width: 100%; margin-bottom: 12px; padding: 15px; font-weight: bold; border-radius: 12px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .btn-amulet { background-color: #6f42c1; color: white; border: none; }
@@ -73,9 +90,19 @@
         <p class="timer-label mb-0">嘔吐していない連続時間</p>
         <div id="timerDisplay" class="timer-display">0日 0時間 0分 0秒</div>
         
-        <div class="prev-record-box">
-            <div class="prev-record-label">🏆 前回の我慢記録</div>
-            <div id="lastDurationDisplay" class="prev-record-value">（未計測）</div>
+        <div class="row g-2 mt-3">
+            <div class="col-6">
+                <div class="record-box prev-record-box">
+                    <div class="prev-record-label">⏮ 前回の記録</div>
+                    <div id="lastDurationDisplay" class="prev-record-value">（未計測）</div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="record-box best-record-box">
+                    <div class="best-record-label">👑 これまでの最長記録</div>
+                    <div id="bestDurationDisplay" class="best-record-value">（未計測）</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -157,328 +184,12 @@
 </div>
 
 <script>
-    // --- セキュリティ強化版パスワード制限 ---
+    // --- パスワード制限 ---
     (function(){
-        // ▼ 設定エリア：必要に応じて書き換えてください
         var password = "soraapp";        // アプリのパスワード
-        var redirectUrl = "https://google.com"; // 間違えた時に飛ばすURL（Googleなどに設定中）
+        var redirectUrl = "https://google.com"; // 間違えた時に飛ばすURL
         var key = "sora_app_lock";
         
-        // 認証チェック関数
         function checkAuth() {
-            // すでにログイン済みか確認
             if (localStorage.getItem(key) === password) {
-                // 正解なら画面を表示する
-                document.body.style.display = 'block';
-                return;
-            }
-
-            // まだならパスワードを聞く
-            // (画面はCSSで display:none になっているので真っ白のまま)
-            // 少しだけ待ってからプロンプトを出す（ブラウザの描画安定のため）
-            setTimeout(function() {
-                var input = prompt("パスワードを入力してください:");
-                
-                if (input === password) {
-                    // 正解！
-                    localStorage.setItem(key, password);
-                    document.body.style.display = 'block';
-                } else {
-                    // 不正解の場合
-                    alert("パスワードが違います。");
-                    
-                    // 前のページに戻る（戻れなければGoogleへ）
-                    if (window.history.length > 1) {
-                        window.history.back();
-                    } else {
-                        window.location.href = redirectUrl;
-                    }
-                    
-                    // 念のため画面を上書きして何も見えなくする
-                    document.body.innerHTML = "";
-                }
-            }, 100);
-        }
-
-        // ページ読み込み時にチェック実行
-        window.addEventListener('DOMContentLoaded', checkAuth);
-    })();
-    // --- パスワードここまで ---
-    
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(console.error);
-    }
-
-    // データ構造: { id, timestamp, event, result, durationStr, durationMs }
-    let soraData = JSON.parse(localStorage.getItem('soraData')) || [];
-    let editModalInstance;
-
-    window.onload = function() {
-        editModalInstance = new bootstrap.Modal(document.getElementById('editModal'));
-        
-        // 初回ロード時
-        document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
-        
-        updateButtonState();
-        renderTable();
-        updateTimer();
-        setInterval(updateTimer, 1000);
-    };
-
-    function logEvent(eventName) {
-        const manualInput = document.getElementById('manualTimeInput').value;
-        const now = manualInput ? new Date(manualInput) : new Date();
-
-        // SORA法開始より前の時間チェック（新規入力時）
-        if (eventName !== 'SORA法開始') {
-            const startEvent = soraData.find(d => d.event === 'SORA法開始');
-            if (startEvent && now.getTime() < startEvent.timestamp) {
-                alert("SORA法開始以前の時刻は入力できません");
-                return; // 入力をキャンセル
-            }
-        }
-
-        document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
-
-        const newEntry = {
-            id: generateId(),
-            timestamp: now.getTime(),
-            event: eventName,
-            result: "",
-            durationStr: "-",
-            durationMs: 0
-        };
-
-        soraData.unshift(newEntry);
-        soraData.sort((a, b) => b.timestamp - a.timestamp);
-
-        recalculateAllLogs();
-        
-        saveData();
-        document.getElementById('manualTimeInput').value = '';
-        updateButtonState();
-        renderTable();
-        updateTimer();
-    }
-
-    function generateId() {
-        if(soraData.length === 0) return 1;
-        const maxId = Math.max(...soraData.map(d => d.id));
-        return maxId + 1;
-    }
-
-    function recalculateAllLogs() {
-        const orderedData = [...soraData].reverse();
-        
-        soraData.forEach(d => {
-            d.result = "";
-            d.durationStr = "-";
-            d.durationMs = 0;
-        });
-
-        for (let i = 0; i < orderedData.length; i++) {
-            const current = orderedData[i];
-            const next = orderedData[i + 1];
-
-            if (current.event === '食事') {
-                if (next) {
-                    const diffMs = next.timestamp - current.timestamp;
-                    const diffStr = calculateDiff(current.timestamp, next.timestamp);
-
-                    if (next.event === '食事') {
-                        current.durationMs = diffMs;
-                        current.durationStr = diffStr;
-                        current.result = '<span class="result-success">達成！</span>';
-                    } else if (next.event === '嘔吐') {
-                        current.durationMs = diffMs;
-                        current.durationStr = diffStr;
-                        current.result = '<span class="result-fail">×</span>';
-                    }
-                }
-            }
-        }
-    }
-
-    function renderTable() {
-        const tbody = document.getElementById('logTableBody');
-        tbody.innerHTML = "";
-
-        soraData.forEach((row) => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${row.result || ''}</td>
-                <td>${formatDate(new Date(row.timestamp))}</td>
-                <td>${row.event}</td>
-                <td style="font-weight:bold;">${row.durationStr}</td>
-                <td><button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${row.id})">編集</button></td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function updateTimer() {
-        const now = new Date();
-        const display = document.getElementById('timerDisplay');
-        const lastDurationDisplay = document.getElementById('lastDurationDisplay');
-
-        if (soraData.length === 0) {
-            display.textContent = "0日 0時間 0分 0秒";
-            lastDurationDisplay.textContent = "（未計測）";
-            return;
-        }
-
-        // 1. 最新の「嘔吐」を探す
-        let latestVomitIndex = -1;
-        for (let i = 0; i < soraData.length; i++) {
-            if (soraData[i].event === '嘔吐') {
-                latestVomitIndex = i;
-                break;
-            }
-        }
-
-        // 2. 時計用の合計時間を計算
-        let totalEnduredMs = 0;
-        const limitIndex = (latestVomitIndex === -1) ? soraData.length : latestVomitIndex;
-
-        for (let i = 0; i < limitIndex; i++) {
-            const row = soraData[i];
-            // 「食事」かつ、成果が出ているものを足す
-            if (row.event === '食事' && row.durationMs > 0) {
-                totalEnduredMs += row.durationMs;
-            }
-        }
-
-        // 3. 進行中の時間を加算
-        if (soraData.length > 0) {
-            const latestEvent = soraData[0];
-            if (latestEvent.event !== '嘔吐') {
-                const currentRunningMs = now.getTime() - latestEvent.timestamp;
-                if (currentRunningMs > 0) {
-                    totalEnduredMs += currentRunningMs;
-                }
-            }
-        }
-
-        display.textContent = formatDuration(totalEnduredMs);
-
-        // 前回の記録表示
-        let prevDurationText = "記録なし";
-        const history = [...soraData].reverse();
-        const vomitEvents = history.filter(d => d.event === '嘔吐');
-
-        if (vomitEvents.length > 0) {
-            const lastVomit = vomitEvents[vomitEvents.length - 1];
-            const prevEvents = history.filter(d => 
-                d.timestamp < lastVomit.timestamp && (d.event === '嘔吐' || d.event === 'SORA法開始')
-            );
-            if (prevEvents.length > 0) {
-                const startPoint = prevEvents[prevEvents.length - 1];
-                prevDurationText = calculateDiff(startPoint.timestamp, lastVomit.timestamp);
-            }
-        }
-        lastDurationDisplay.textContent = prevDurationText;
-    }
-
-    function formatDuration(ms) {
-        const day = Math.floor(ms / (1000 * 60 * 60 * 24));
-        const hour = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const min = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
-        const sec = Math.floor((ms % (1000 * 60)) / 1000);
-        return `${day}日 ${hour}時間 ${min}分 ${sec}秒`;
-    }
-
-    function calculateDiff(startMs, endMs) {
-        let diff = endMs - startMs;
-        if (diff < 0) diff = 0;
-        return formatDuration(diff);
-    }
-
-    function saveData() {
-        localStorage.setItem('soraData', JSON.stringify(soraData));
-    }
-    
-    function updateButtonState() {
-        const hasData = soraData.length > 0;
-        document.getElementById('btnStart').disabled = hasData; 
-        document.getElementById('btnMeal').disabled = !hasData; 
-        document.getElementById('btnVomit').disabled = !hasData;
-    }
-
-    function openEdit(id) {
-        const target = soraData.find(d => d.id === id);
-        if(!target) return;
-        document.getElementById('editId').value = target.id;
-        document.getElementById('editEvent').value = target.event;
-        const date = new Date(target.timestamp);
-        date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
-        document.getElementById('editTime').value = date.toISOString().slice(0, 16);
-        editModalInstance.show();
-    }
-
-    function saveEdit() {
-        const id = parseInt(document.getElementById('editId').value);
-        const timeInput = document.getElementById('editTime').value;
-        const eventInput = document.getElementById('editEvent').value;
-        if(!timeInput) { alert("日時を入力してください"); return; }
-        
-        const newTimestamp = new Date(timeInput).getTime();
-        
-        // --- 編集時の日時チェック ---
-        // 「SORA法開始」以外のイベントを編集しようとしている場合
-        if (eventInput !== 'SORA法開始') {
-            // 保存されているデータの中から「SORA法開始」を探す
-            const startEvent = soraData.find(d => d.event === 'SORA法開始');
-            
-            if (startEvent) {
-                // SORA法開始の時間より前かどうかチェック
-                if (newTimestamp < startEvent.timestamp) {
-                    alert("SORA法開始以前の時刻は入力できません");
-                    return; // 保存を中止して終了
-                }
-            }
-        }
-        // ------------------------
-
-        const targetIndex = soraData.findIndex(d => d.id === id);
-        if(targetIndex > -1) {
-            soraData[targetIndex].timestamp = newTimestamp;
-            soraData[targetIndex].event = eventInput;
-            
-            soraData.sort((a, b) => b.timestamp - a.timestamp);
-            recalculateAllLogs();
-            saveData();
-            
-            editModalInstance.hide();
-            renderTable();
-            updateTimer();
-        }
-    }
-
-    function resetSora() {
-        if(confirm("データを全て消去して、最初からやり直しますか？")) {
-            soraData = [];
-            localStorage.removeItem('soraData');
-            localStorage.removeItem('sora_app_lock'); // パスワードも解除
-            
-            document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
-            
-            updateButtonState();
-            renderTable();
-            updateTimer();
-
-            // パスワード認証を再開するため、画面をリロード
-            location.reload(); 
-        }
-    }
-
-    function formatDate(date) {
-        const M = ("0" + (date.getMonth() + 1)).slice(-2);
-        const d = ("0" + date.getDate()).slice(-2);
-        const h = ("0" + date.getHours()).slice(-2);
-        const m = ("0" + date.getMinutes()).slice(-2);
-        const s = ("0" + date.getSeconds()).slice(-2);
-        return `${M}/${d} ${h}:${m}:${s}`;
-    }
-</script>
-</body>
-</html>
+                document.body
