@@ -9,7 +9,14 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <meta name="theme-color" content="#f0f4f8">
     <style>
-        body { background-color: #fcfcfc; font-family: "Helvetica Neue", Arial, sans-serif; user-select: none; padding-bottom: 50px; }
+        /* 重要：最初は画面を非表示にしておく */
+        body { 
+            background-color: #fcfcfc; 
+            font-family: "Helvetica Neue", Arial, sans-serif; 
+            user-select: none; 
+            padding-bottom: 50px;
+            display: none; /* ←これが画面を隠す魔法です */
+        }
         
         .timer-card { 
             background: white; 
@@ -58,31 +65,7 @@
     </style>
 </head>
 <body>
-<script>
-  // --- ここからパスワード制限のコード ---
-  (function(){
-    var password = "soraapp"; // ←ここを好きなパスワードに変えてください
-    var key = "sora_app_lock"; // 合言葉を保存する名前
-    
-    // すでに合言葉を入れてあるか確認
-    if (localStorage.getItem(key) === password) {
-      return; // 合っていれば何もしない（アプリを表示）
-    }
 
-    // パスワードを聞く
-    var input = prompt("SORAアプリを開くためのパスワードを入力してください:");
-
-    if (input === password) {
-      // 正解なら保存してアプリを表示
-      localStorage.setItem(key, password);
-    } else {
-      // 不正解なら画面を真っ白にして拒否
-      document.body.innerHTML = '<h2 style="text-align:center; margin-top:50px;">パスワードが違います<br>再読み込みしてください</h2>';
-      throw new Error("パスワード違いにより停止");
-    }
-  })();
-  // --- ここまで ---
-</script>
 <div class="container py-3" style="max-width: 600px;">
     <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
 
@@ -174,24 +157,70 @@
 </div>
 
 <script>
+    // --- セキュリティ強化版パスワード制限 ---
+    (function(){
+        // ▼ 設定エリア：必要に応じて書き換えてください
+        var password = "soraapp";        // アプリのパスワード
+        var redirectUrl = "https://google.com"; // 間違えた時に飛ばすURL（Googleなどに設定中）
+        var key = "sora_app_lock";
+        
+        // 認証チェック関数
+        function checkAuth() {
+            // すでにログイン済みか確認
+            if (localStorage.getItem(key) === password) {
+                // 正解なら画面を表示する
+                document.body.style.display = 'block';
+                return;
+            }
+
+            // まだならパスワードを聞く
+            // (画面はCSSで display:none になっているので真っ白のまま)
+            // 少しだけ待ってからプロンプトを出す（ブラウザの描画安定のため）
+            setTimeout(function() {
+                var input = prompt("パスワードを入力してください:");
+                
+                if (input === password) {
+                    // 正解！
+                    localStorage.setItem(key, password);
+                    document.body.style.display = 'block';
+                } else {
+                    // 不正解の場合
+                    alert("パスワードが違います。");
+                    
+                    // 前のページに戻る（戻れなければGoogleへ）
+                    if (window.history.length > 1) {
+                        window.history.back();
+                    } else {
+                        window.location.href = redirectUrl;
+                    }
+                    
+                    // 念のため画面を上書きして何も見えなくする
+                    document.body.innerHTML = "";
+                }
+            }, 100);
+        }
+
+        // ページ読み込み時にチェック実行
+        window.addEventListener('DOMContentLoaded', checkAuth);
+    })();
+    // --- パスワードここまで ---
+    
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(console.error);
     }
 
     // データ構造: { id, timestamp, event, result, durationStr, durationMs }
-    // durationMs: 計算用のミリ秒（正確な合計のため）
     let soraData = JSON.parse(localStorage.getItem('soraData')) || [];
     let editModalInstance;
 
     window.onload = function() {
         editModalInstance = new bootstrap.Modal(document.getElementById('editModal'));
         
-        // 初回ロード時: 一旦リセット
+        // 初回ロード時
         document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
         
         updateButtonState();
         renderTable();
-        // 計算して時計を動かす
         updateTimer();
         setInterval(updateTimer, 1000);
     };
@@ -200,7 +229,15 @@
         const manualInput = document.getElementById('manualTimeInput').value;
         const now = manualInput ? new Date(manualInput) : new Date();
 
-        // 時計を一旦リセット（視覚的な要件）
+        // SORA法開始より前の時間チェック（新規入力時）
+        if (eventName !== 'SORA法開始') {
+            const startEvent = soraData.find(d => d.event === 'SORA法開始');
+            if (startEvent && now.getTime() < startEvent.timestamp) {
+                alert("SORA法開始以前の時刻は入力できません");
+                return; // 入力をキャンセル
+            }
+        }
+
         document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
 
         const newEntry = {
@@ -215,15 +252,12 @@
         soraData.unshift(newEntry);
         soraData.sort((a, b) => b.timestamp - a.timestamp);
 
-        // ログの整合性を計算
         recalculateAllLogs();
         
         saveData();
         document.getElementById('manualTimeInput').value = '';
         updateButtonState();
         renderTable();
-        
-        // 時計計算・再開
         updateTimer();
     }
 
@@ -233,9 +267,7 @@
         return maxId + 1;
     }
 
-    // ログ全体を再計算（成果、時間、ミリ秒）
     function recalculateAllLogs() {
-        // 時系列順（古い順）にする
         const orderedData = [...soraData].reverse();
         
         soraData.forEach(d => {
@@ -250,9 +282,8 @@
 
             if (current.event === '食事') {
                 if (next) {
-                    // 次のイベントまでの時間を計算
                     const diffMs = next.timestamp - current.timestamp;
-                    const diffStr = calculateDiff(current.timestamp, next.timestamp); // 秒あり文字列
+                    const diffStr = calculateDiff(current.timestamp, next.timestamp);
 
                     if (next.event === '食事') {
                         current.durationMs = diffMs;
@@ -268,7 +299,6 @@
         }
     }
 
-    // テーブル描画
     function renderTable() {
         const tbody = document.getElementById('logTableBody');
         tbody.innerHTML = "";
@@ -286,7 +316,6 @@
         });
     }
 
-    // 時計更新ロジック（合計計算）
     function updateTimer() {
         const now = new Date();
         const display = document.getElementById('timerDisplay');
@@ -299,7 +328,6 @@
         }
 
         // 1. 最新の「嘔吐」を探す
-        // soraDataは新しい順
         let latestVomitIndex = -1;
         for (let i = 0; i < soraData.length; i++) {
             if (soraData[i].event === '嘔吐') {
@@ -308,24 +336,19 @@
             }
         }
 
-        // 2. それより先の（新しい）「食事」行の「耐えた時間(durationMs)」を合計する
-        // 嘔吐がない場合は全てのデータを対象にする
+        // 2. 時計用の合計時間を計算
         let totalEnduredMs = 0;
-        
-        // 嘔吐が見つかったらその手前まで、見つからなければ最後まで
         const limitIndex = (latestVomitIndex === -1) ? soraData.length : latestVomitIndex;
 
         for (let i = 0; i < limitIndex; i++) {
             const row = soraData[i];
-            // 「食事」かつ、成果が出ている（durationMs > 0）ものを足す
+            // 「食事」かつ、成果が出ているものを足す
             if (row.event === '食事' && row.durationMs > 0) {
                 totalEnduredMs += row.durationMs;
             }
         }
 
-        // 3. 最後に、現在進行形の時間（最新のイベントから現在まで）を足す
-        // ただし、最新のイベントが「嘔吐」ならカウントは0から（リセット直後）
-        // 最新のイベントが「食事」や「開始」ならその時間を足す
+        // 3. 進行中の時間を加算
         if (soraData.length > 0) {
             const latestEvent = soraData[0];
             if (latestEvent.event !== '嘔吐') {
@@ -336,11 +359,9 @@
             }
         }
 
-        // 4. 合計時間を表示
         display.textContent = formatDuration(totalEnduredMs);
 
-
-        // --- 前回の我慢記録（表示ロジックは変更なし） ---
+        // 前回の記録表示
         let prevDurationText = "記録なし";
         const history = [...soraData].reverse();
         const vomitEvents = history.filter(d => d.event === '嘔吐');
@@ -358,7 +379,6 @@
         lastDurationDisplay.textContent = prevDurationText;
     }
 
-    // ミリ秒を ○日○時間○分○秒 文字列にする
     function formatDuration(ms) {
         const day = Math.floor(ms / (1000 * 60 * 60 * 24));
         const hour = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -367,7 +387,6 @@
         return `${day}日 ${hour}時間 ${min}分 ${sec}秒`;
     }
 
-    // 2点間の差分計算（秒まで表示）
     function calculateDiff(startMs, endMs) {
         let diff = endMs - startMs;
         if (diff < 0) diff = 0;
@@ -402,9 +421,27 @@
         const eventInput = document.getElementById('editEvent').value;
         if(!timeInput) { alert("日時を入力してください"); return; }
         
+        const newTimestamp = new Date(timeInput).getTime();
+        
+        // --- 編集時の日時チェック ---
+        // 「SORA法開始」以外のイベントを編集しようとしている場合
+        if (eventInput !== 'SORA法開始') {
+            // 保存されているデータの中から「SORA法開始」を探す
+            const startEvent = soraData.find(d => d.event === 'SORA法開始');
+            
+            if (startEvent) {
+                // SORA法開始の時間より前かどうかチェック
+                if (newTimestamp < startEvent.timestamp) {
+                    alert("SORA法開始以前の時刻は入力できません");
+                    return; // 保存を中止して終了
+                }
+            }
+        }
+        // ------------------------
+
         const targetIndex = soraData.findIndex(d => d.id === id);
         if(targetIndex > -1) {
-            soraData[targetIndex].timestamp = new Date(timeInput).getTime();
+            soraData[targetIndex].timestamp = newTimestamp;
             soraData[targetIndex].event = eventInput;
             
             soraData.sort((a, b) => b.timestamp - a.timestamp);
@@ -421,13 +458,16 @@
         if(confirm("データを全て消去して、最初からやり直しますか？")) {
             soraData = [];
             localStorage.removeItem('soraData');
+            localStorage.removeItem('sora_app_lock'); // パスワードも解除
             
-            // 時計リセット
             document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
             
             updateButtonState();
             renderTable();
             updateTimer();
+
+            // パスワード認証を再開するため、画面をリロード
+            location.reload(); 
         }
     }
 
