@@ -61,7 +61,7 @@
         .best-record-label { font-size: 0.9rem; color: #744210; font-weight: bold; margin-bottom: 5px; }
         .best-record-value { font-size: 1.3rem; color: #d69e2e; font-weight: 800; line-height: 1.2; }
 
-        /* メッセージ欄のデザイン（新規追加） */
+        /* メッセージ欄のデザイン */
         .message-box { 
             background-color: #e7f1ff; 
             border: 2px solid #b6d4fe; 
@@ -73,10 +73,19 @@
         .message-label { font-size: 0.9rem; color: #084298; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; }
         .message-value { font-size: 1.0rem; color: #333; white-space: pre-wrap; line-height: 1.6; }
 
+        /* 操作グループボックス */
+        .action-group-box {
+            background-color: #fff;
+            border: 2px solid #e1e8ed;
+            border-radius: 15px;
+            padding: 20px 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
         /* ボタンデザイン */
         .btn-custom { 
             width: 100%; 
-            margin-bottom: 12px; 
             padding: 15px; 
             font-weight: bold; 
             border-radius: 12px; 
@@ -99,14 +108,21 @@
         }
 
         .btn-amulet { 
-            background-color: #6f42c1; color: white; border: none; 
+            background-color: #6f42c1; color: white; border: none; margin-bottom: 12px;
         }
         .btn-amulet:hover { background-color: #59359a; color: white; }
 
         .history-section { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .table-responsive { font-size: 0.85rem; }
         
-        .date-input-group { background: #e9ecef; padding: 10px; border-radius: 10px; margin-bottom: 20px; }
+        /* 日時入力欄のデザイン調整 */
+        .date-input-container { 
+            background: #f8f9fa; 
+            padding: 10px; 
+            border-radius: 10px; 
+            margin-top: 15px; 
+            border: 1px solid #dee2e6;
+        }
 
         /* リカバリーアミュレット画面用 */
         .amulet-list-btn {
@@ -172,21 +188,29 @@
     </div>
 
     <div class="mb-5">
-        <div class="date-input-group">
-            <label class="date-input-label" style="font-size:0.8rem; color:#666;">🕒 過去の時間を入力する場合はここを設定</label>
-            <input type="datetime-local" id="manualTimeInput" class="form-control">
+        <div class="row mb-3">
+             <div class="col-12">
+                <button id="btnStart" class="btn btn-primary btn-custom" onclick="logEvent('SORA法開始')">🚀 SORA法開始</button>
+            </div>
+        </div>
+
+        <div class="action-group-box">
+            <div class="row g-2">
+                <div class="col-6">
+                    <button id="btnMeal" class="btn btn-success btn-custom mb-0" onclick="logEvent('食事')" disabled>🍽️ 食事</button>
+                </div>
+                <div class="col-6">
+                    <button id="btnVomit" class="btn btn-danger btn-custom mb-0" onclick="logEvent('嘔吐')" disabled>⚠️ 嘔吐</button>
+                </div>
+            </div>
+            
+            <div class="date-input-container">
+                <label class="date-input-label" style="font-size:0.85rem; color:#555; font-weight:bold; margin-bottom:5px; display:block;">🕒 時間を指定して入力</label>
+                <input type="datetime-local" id="manualTimeInput" class="form-control">
+            </div>
         </div>
 
         <div class="row g-2">
-            <div class="col-12">
-                <button id="btnStart" class="btn btn-primary btn-custom" onclick="logEvent('SORA法開始')">🚀 SORA法開始</button>
-            </div>
-            <div class="col-6">
-                <button id="btnMeal" class="btn btn-success btn-custom" onclick="logEvent('食事')" disabled>🍽️ 食事</button>
-            </div>
-            <div class="col-6">
-                <button id="btnVomit" class="btn btn-danger btn-custom" onclick="logEvent('嘔吐')" disabled>⚠️ 嘔吐</button>
-            </div>
             <div class="col-12">
                 <button id="btnAmulet" class="btn btn-amulet btn-custom disabled" onclick="showAmuletList()">🛡️ リカバリーアミュレット</button>
             </div>
@@ -278,7 +302,7 @@
 
     // --- パスワード制限 ---
     (function(){
-        var password = "56";        // ★変更しました：パスワードを56に設定
+        var password = "56";        // パスワード：56
         var redirectUrl = "https://google.com";
         var key = "sora_app_lock";
         
@@ -382,21 +406,21 @@
         }
 
         runFunctionF(); // 時間計算
-        calculateBestDuration(); // ★食事ボタンなどでもここで最長記録が更新されます
+        calculateBestDuration(); // 最長記録更新
         
         saveData();
         document.getElementById('manualTimeInput').value = '';
         updateButtonState();
         renderTable();
 
-        // --- フィードバックメッセージを表示（アラートではなく画面内に） ---
+        // --- フィードバックメッセージを表示 ---
         const latestLog = soraData[0];
         if (latestLog) {
             checkFeedback(eventName, latestLog.durationMs);
         }
     }
 
-    // フィードバックメッセージ判定関数（アラートを廃止し、メッセージボックスに表示）
+    // フィードバックメッセージ判定関数
     function checkFeedback(eventType, ms) {
         if (eventType === 'SORA法開始') {
             document.getElementById('messageDisplay').textContent = "SORA法を開始しました。自分のペースで進めていきましょう！";
@@ -432,8 +456,7 @@
                 msg = "前の食事からちょっと時間が開いてるね。辛いときはリカバリーアミュレットを使って！";
             }
             
-            // アラートは削除し、画面に表示
-            document.getElementById('messageDisplay').textContent = `今、${timeStr}、嘔吐しないで過ごせています。\n${msg}`;
+            document.getElementById('messageDisplay').textContent = `いま${timeStr}嘔吐しないで過ごせています。\n${msg}`;
 
         } else if (eventType === '嘔吐') {
             if (ms < 5 * MIN) {
@@ -464,8 +487,7 @@
                 msg = "3時間以上も嘔吐を我慢できている。最高の偉業だよ。次は吐く代わりになにか食べるのに挑戦してみて。SORAの原理とリカバリーアミュレットを組み合わせればきっと可能だよ！";
             }
             
-            // アラートは削除し、画面に表示
-            document.getElementById('messageDisplay').textContent = `${timeStr}、嘔吐しないで過ごせたね。\n${msg}`;
+            document.getElementById('messageDisplay').textContent = `${timeStr}嘔吐しないで過ごせたね。\n${msg}`;
         }
     }
 
@@ -530,24 +552,18 @@
         }
     }
 
-    // ★最長記録の計算ロジック（修正版）
-    // 食事ボタンを押した時も含め、すべての記録の中から「嘔吐しなかった期間」の最大値を探します
+    // ★最長記録の計算ロジック
     function calculateBestDuration() {
         const display = document.getElementById('bestDurationDisplay');
         const startEvent = soraData.find(d => d.event === 'SORA法開始');
         
-        // 開始イベントがなければ未計測
         if (!startEvent) {
             display.textContent = "（未計測）";
             return;
         }
 
         let maxMs = 0;
-
-        // 全データの durationMs（直前の嘔吐/開始からの経過時間）をチェックして最大値を見つける
-        // runFunctionFで計算済みなので、単純に最大値を探すだけでOKです
         soraData.forEach(d => {
-            // SORA法開始は durationMsが0なので無視されます
             if (d.durationMs > maxMs) {
                 maxMs = d.durationMs;
             }
@@ -683,7 +699,7 @@
         stopTimer();
         soraData = [];
         localStorage.removeItem('soraData');
-        localStorage.removeItem('sora_app_lock');
+        // localStorage.removeItem('sora_app_lock'); // ← ここをコメントアウト/削除することでログイン状態を維持
         
         document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
         document.getElementById('bestDurationDisplay').textContent = "（未計測）";
@@ -745,7 +761,6 @@
             editModalInstance.hide();
             renderTable();
             
-            // 編集後の最新メッセージを表示する
             if (soraData.length > 0) {
                  checkFeedback(soraData[0].event, soraData[0].durationMs);
             }
