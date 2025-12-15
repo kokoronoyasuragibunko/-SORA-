@@ -114,6 +114,7 @@
             opacity: 1;
         }
 
+        /* 無効時の共通設定（薄くする処理はここで行われます） */
         .btn-custom[disabled], .btn-custom.disabled {
             opacity: 0.4; 
             pointer-events: none; 
@@ -121,8 +122,12 @@
             box-shadow: none;
         }
 
-        .btn-amulet { 
-            background-color: #6f42c1; color: white; border: none; margin-bottom: 12px;
+        /* ★変更：アミュレットボタンの設定（無効時も背景色を維持） */
+        .btn-amulet, .btn-amulet:disabled, .btn-amulet.disabled { 
+            background-color: #6f42c1; 
+            color: white; 
+            border: none; 
+            margin-bottom: 12px;
         }
         .btn-amulet:hover { background-color: #59359a; color: white; }
 
@@ -176,7 +181,6 @@
             width: 100%;
         }
         
-        /* 強制更新ボタン用のスタイル */
         .btn-update {
             background-color: #ffc107;
             color: #000;
@@ -193,8 +197,7 @@
     <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
 
     <div class="timer-card">
-        <div class="app-version">v4</div>
-        <p class="timer-label mb-0">嘔吐していない連続時間</p>
+        <div class="app-version">v5</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
         <div id="timerDisplay" class="timer-display">0日 0時間 0分 0秒</div>
         
         <div class="mt-4">
@@ -342,9 +345,10 @@
     })();
     
     // --- Service Worker 登録 ---
+    // sw.js?v=5 にバージョンを合わせることを推奨
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=4').then(function(registration) {
-            registration.update(); // 起動時に更新チェック
+        navigator.serviceWorker.register('./sw.js?v=5').then(function(registration) {
+            registration.update();
             
             registration.onupdatefound = function() {
                 const installingWorker = registration.installing;
@@ -363,19 +367,17 @@
         });
     }
 
-    // ★追加：強制更新機能（ボタンから呼び出す）
+    // 強制更新機能
     async function forceAppUpdate() {
         const confirmUpdate = confirm("アプリを強制的に更新しますか？\n（記録データは消えません）");
         if (!confirmUpdate) return;
 
         if ('serviceWorker' in navigator) {
-            // すべてのServiceWorker登録を解除する
             const registrations = await navigator.serviceWorker.getRegistrations();
             for (const registration of registrations) {
                 await registration.unregister();
             }
         }
-        // キャッシュを無視してリロード
         window.location.reload(true);
     }
 

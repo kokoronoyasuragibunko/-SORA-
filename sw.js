@@ -1,5 +1,5 @@
 // バージョン定義：更新する時はここを書き換えます
-const CACHE_NAME = 'sora-app-v4';
+const CACHE_NAME = 'sora-app-v5';
 
 // キャッシュするファイルのリスト
 const urlsToCache = [
