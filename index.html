@@ -319,8 +319,25 @@
         window.addEventListener('DOMContentLoaded', checkAuth);
     })();
     
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js').catch(console.error);
+if ('serviceWorker' in navigator) {
+        // 更新が見つかったら自動的にリロードする処理を追加
+        navigator.serviceWorker.register('./sw.js').then(function(registration) {
+            registration.onupdatefound = function() {
+                const installingWorker = registration.installing;
+                installingWorker.onstatechange = function() {
+                    if (installingWorker.state === 'installed') {
+                        if (navigator.serviceWorker.controller) {
+                            console.log('新しい更新があります。');
+                        }
+                    }
+                };
+            };
+        }).catch(console.error);
+
+        // 新しいServiceWorkerが制御を開始したらページをリロードする
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            window.location.reload();
+        });
     }
 
     let soraData = JSON.parse(localStorage.getItem('soraData')) || [];

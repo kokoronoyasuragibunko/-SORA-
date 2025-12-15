@@ -1,5 +1,5 @@
-// バージョン定義：更新する時はここを書き換えます（例：v1 -> v2）
-const CACHE_NAME = 'sora-app-v2';
+// バージョン定義：更新する時はここを書き換えます
+const CACHE_NAME = 'sora-app-v4';
 
 // キャッシュするファイルのリスト
 const urlsToCache = [
@@ -11,8 +11,11 @@ const urlsToCache = [
   'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'
 ];
 
-// 1. インストール時：指定したファイルをキャッシュに保存
+// 1. インストール時
 self.addEventListener('install', function(event) {
+  // ★追加：待機状態をスキップして、即座に新しいSWを有効にする命令
+  self.skipWaiting();
+
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function(cache) {
@@ -22,7 +25,7 @@ self.addEventListener('install', function(event) {
   );
 });
 
-// 2. 有効化時：古いキャッシュ（バージョン違い）を削除する
+// 2. 有効化時
 self.addEventListener('activate', function(event) {
   const cacheWhitelist = [CACHE_NAME];
   event.waitUntil(
@@ -30,25 +33,24 @@ self.addEventListener('activate', function(event) {
       return Promise.all(
         cacheNames.map(function(cacheName) {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
-            // 新しいバージョン以外のキャッシュを削除
             return caches.delete(cacheName);
           }
         })
       );
     })
+    // ★追加：すぐに全てのページのコントロールを開始する命令
+    .then(() => self.clients.claim())
   );
 });
 
-// 3. 通信時：キャッシュがあればそれを返し、なければネットに取りに行く
+// 3. 通信時
 self.addEventListener('fetch', function(event) {
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
-        // キャッシュが見つかればそれを返す
         if (response) {
           return response;
         }
-        // なければネットワークへ
         return fetch(event.request);
       })
   );
