@@ -33,10 +33,19 @@
             margin-bottom: 25px; 
             text-align: center; 
             border: 1px solid #e1e8ed;
+            position: relative; /* バージョン表示用 */
+        }
+
+        /* バージョン表示（右上に小さく） */
+        .app-version {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 0.7rem;
+            color: #ccc;
         }
 
         .timer-display { 
-            /* スマホ用にフォントサイズを自動調整 */
             font-size: clamp(1.5rem, 6vw, 2.5rem); 
             font-weight: 900; 
             color: #0d6efd; 
@@ -45,7 +54,6 @@
             margin: 5px 0;
             line-height: 1.2;
             text-shadow: 1px 1px 0px rgba(0,0,0,0.05);
-            /* 勝手に改行させない設定 */
             white-space: nowrap;
         }
 
@@ -177,7 +185,7 @@
     <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
 
     <div class="timer-card">
-        <p class="timer-label mb-0">嘔吐していない連続時間</p>
+        <div class="app-version">v4</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
         <div id="timerDisplay" class="timer-display">0日 0時間 0分 0秒</div>
         
         <div class="mt-4">
@@ -319,16 +327,22 @@
         window.addEventListener('DOMContentLoaded', checkAuth);
     })();
     
-    // --- Service Worker 登録 (自動更新対応) ---
+    // --- Service Worker 登録 (強力な更新機能付き) ---
+    // ?v=4 というクエリパラメータをつけることで、ブラウザに強制的に新しいファイルだと認識させます
     if ('serviceWorker' in navigator) {
-        // 更新が見つかったら自動的にリロードする処理を追加
-        navigator.serviceWorker.register('./sw.js').then(function(registration) {
+        navigator.serviceWorker.register('./sw.js?v=4').then(function(registration) {
+            
+            // アプリ起動時に必ず更新チェックを行う
+            registration.update();
+
             registration.onupdatefound = function() {
                 const installingWorker = registration.installing;
                 installingWorker.onstatechange = function() {
                     if (installingWorker.state === 'installed') {
                         if (navigator.serviceWorker.controller) {
-                            console.log('新しい更新があります。');
+                            console.log('新しい更新があります。リロードします...');
+                            // ここではリロードせず、下のcontrollerchangeに任せるか、
+                            // ユーザーに通知を出しても良いですが、今回は自動更新優先です。
                         }
                     }
                 };
@@ -367,6 +381,7 @@
         }
     };
     
+    // イベントログ処理
     function logEvent(eventName) {
         const manualInput = document.getElementById('manualTimeInput').value;
         const now = manualInput ? new Date(manualInput) : new Date();
@@ -780,6 +795,7 @@
         const container = document.getElementById('amuletButtonsContainer');
         container.innerHTML = "";
         
+        // AMULETS変数は amulets.js から読み込まれます
         if (typeof AMULETS !== 'undefined') {
             AMULETS.forEach((amulet, index) => {
                 const btn = document.createElement('button');
