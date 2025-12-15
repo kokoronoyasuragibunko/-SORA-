@@ -36,7 +36,7 @@
         }
 
         .timer-display { 
-            /* ★変更箇所：スマホ用にフォントサイズを自動調整（clamp関数） */
+            /* スマホ用にフォントサイズを自動調整 */
             font-size: clamp(1.5rem, 6vw, 2.5rem); 
             font-weight: 900; 
             color: #0d6efd; 
@@ -45,7 +45,7 @@
             margin: 5px 0;
             line-height: 1.2;
             text-shadow: 1px 1px 0px rgba(0,0,0,0.05);
-            /* ★追加：勝手に改行させない設定 */
+            /* 勝手に改行させない設定 */
             white-space: nowrap;
         }
 
@@ -291,7 +291,7 @@
 <script>
     // --- パスワード制限 ---
     (function(){
-        var password = "56";        // パスワード：56
+        var password = "56";        // パスワード
         var redirectUrl = "https://google.com";
         var key = "sora_app_lock";
         
@@ -319,7 +319,8 @@
         window.addEventListener('DOMContentLoaded', checkAuth);
     })();
     
-if ('serviceWorker' in navigator) {
+    // --- Service Worker 登録 (自動更新対応) ---
+    if ('serviceWorker' in navigator) {
         // 更新が見つかったら自動的にリロードする処理を追加
         navigator.serviceWorker.register('./sw.js').then(function(registration) {
             registration.onupdatefound = function() {
@@ -351,16 +352,14 @@ if ('serviceWorker' in navigator) {
         createAmuletButtons();
         updateButtonState();
         runFunctionF(); 
-        calculateBestDuration(); // 最長記録計算
+        calculateBestDuration(); 
         renderTable();
         
-        // 最新のログがあれば、そのメッセージを表示する
         if (soraData.length > 0) {
             checkFeedback(soraData[0].event, soraData[0].durationMs);
         }
 
         const latestEvent = soraData[0];
-        // SORA法開始、または食事が最新ならタイマー開始
         if (latestEvent && (latestEvent.event === '食事' || latestEvent.event === 'SORA法開始')) {
              startTimer();
         } else {
@@ -368,7 +367,6 @@ if ('serviceWorker' in navigator) {
         }
     };
     
-    // イベントログ処理
     function logEvent(eventName) {
         const manualInput = document.getElementById('manualTimeInput').value;
         const now = manualInput ? new Date(manualInput) : new Date();
@@ -398,7 +396,6 @@ if ('serviceWorker' in navigator) {
         soraData.unshift(newEntry);
         soraData.sort((a, b) => b.timestamp - a.timestamp);
 
-        // 時計制御：SORA法開始もタイマー起動
         if (eventName === 'SORA法開始') {
             startTimer();
         } else if (eventName === '食事') {
@@ -411,22 +408,20 @@ if ('serviceWorker' in navigator) {
             startTimer();
         }
 
-        runFunctionF(); // 時間計算
-        calculateBestDuration(); // 最長記録更新
+        runFunctionF(); 
+        calculateBestDuration(); 
         
         saveData();
         document.getElementById('manualTimeInput').value = '';
         updateButtonState();
         renderTable();
 
-        // --- フィードバックメッセージを表示 ---
         const latestLog = soraData[0];
         if (latestLog) {
             checkFeedback(eventName, latestLog.durationMs);
         }
     }
 
-    // フィードバックメッセージ判定関数
     function checkFeedback(eventType, ms) {
         if (eventType === 'SORA法開始') {
             document.getElementById('messageDisplay').textContent = "SORA法を開始しました。自分のペースで進めていきましょう！";
@@ -518,7 +513,6 @@ if ('serviceWorker' in navigator) {
         return maxId + 1;
     }
 
-    // 計算関数：直前の嘔吐（または開始）からの経過時間を全行計算
     function runFunctionF() {
         const orderedData = [...soraData].reverse();
         
@@ -558,7 +552,6 @@ if ('serviceWorker' in navigator) {
         }
     }
 
-    // ★最長記録の計算ロジック
     function calculateBestDuration() {
         const display = document.getElementById('bestDurationDisplay');
         const startEvent = soraData.find(d => d.event === 'SORA法開始');
@@ -761,7 +754,7 @@ if ('serviceWorker' in navigator) {
             soraData.sort((a, b) => b.timestamp - a.timestamp);
             
             runFunctionF();
-            calculateBestDuration(); // 編集保存時にも再計算
+            calculateBestDuration(); 
             
             saveData();
             editModalInstance.hide();
@@ -787,7 +780,6 @@ if ('serviceWorker' in navigator) {
         const container = document.getElementById('amuletButtonsContainer');
         container.innerHTML = "";
         
-        // AMULETS変数は amulets.js から読み込まれます
         if (typeof AMULETS !== 'undefined') {
             AMULETS.forEach((amulet, index) => {
                 const btn = document.createElement('button');
