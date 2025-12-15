@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SORA法 アプリ</title>
+    
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
     <link rel="manifest" href="manifest.json">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -33,10 +38,10 @@
             margin-bottom: 25px; 
             text-align: center; 
             border: 1px solid #e1e8ed;
-            position: relative; /* バージョン表示用 */
+            position: relative;
         }
 
-        /* バージョン表示（右上に小さく） */
+        /* バージョン表示 */
         .app-version {
             position: absolute;
             top: 10px;
@@ -57,7 +62,6 @@
             white-space: nowrap;
         }
 
-        /* フォントサイズを1.5倍 */
         .timer-label { font-size: 1.5rem; color: #555; font-weight: bold; }
 
         .record-box {
@@ -70,12 +74,10 @@
             align-items: center;
         }
 
-        /* 最長記録のデザイン */
         .best-record-box { background-color: #fffaf0; border: 2px solid #feebc8; width: 100%; }
         .best-record-label { font-size: 0.9rem; color: #744210; font-weight: bold; margin-bottom: 5px; }
         .best-record-value { font-size: 1.3rem; color: #d69e2e; font-weight: 800; line-height: 1.2; }
 
-        /* メッセージ欄のデザイン */
         .message-box { 
             background-color: #e7f1ff; 
             border: 2px solid #b6d4fe; 
@@ -87,7 +89,6 @@
         .message-label { font-size: 0.9rem; color: #084298; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; }
         .message-value { font-size: 1.0rem; color: #333; white-space: pre-wrap; line-height: 1.6; }
 
-        /* 操作グループボックス */
         .action-group-box {
             background-color: #fff;
             border: 2px solid #e1e8ed;
@@ -97,7 +98,6 @@
             box-shadow: 0 4px 6px rgba(0,0,0,0.05);
         }
 
-        /* ボタンデザイン */
         .btn-custom { 
             width: 100%; 
             padding: 15px; 
@@ -129,7 +129,6 @@
         .history-section { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .table-responsive { font-size: 0.85rem; }
         
-        /* 日時入力欄のデザイン調整 */
         .date-input-container { 
             background: #f8f9fa; 
             padding: 10px; 
@@ -138,7 +137,6 @@
             border: 1px solid #dee2e6;
         }
 
-        /* リカバリーアミュレット画面用 */
         .amulet-list-btn {
             text-align: left;
             white-space: normal;
@@ -162,7 +160,7 @@
             border-radius: 15px;
             line-height: 1.8;
             font-size: 1rem;
-            white-space: pre-wrap; /* 改行を反映 */
+            white-space: pre-wrap;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
         .amulet-title {
@@ -177,6 +175,16 @@
             margin-top: 20px;
             width: 100%;
         }
+        
+        /* 強制更新ボタン用のスタイル */
+        .btn-update {
+            background-color: #ffc107;
+            color: #000;
+            border: none;
+            font-size: 0.85rem;
+            padding: 10px;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -185,7 +193,8 @@
     <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
 
     <div class="timer-card">
-        <div class="app-version">v4</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
+        <div class="app-version">v4</div>
+        <p class="timer-label mb-0">嘔吐していない連続時間</p>
         <div id="timerDisplay" class="timer-display">0日 0時間 0分 0秒</div>
         
         <div class="mt-4">
@@ -230,6 +239,11 @@
             </div>
             <div class="col-12">
                 <button class="btn btn-secondary btn-custom" style="font-size: 0.9rem; background-color:#95a5a6; border:none;" onclick="confirmReset()">🔄 SORAをやり直す</button>
+            </div>
+            
+            <div class="col-12 mt-3 text-center">
+                <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">アプリが更新されない場合はこちら</p>
+                <button class="btn btn-update btn-custom" onclick="forceAppUpdate()">⚡ アプリを強制更新して再読み込み</button>
             </div>
         </div>
     </div>
@@ -299,7 +313,7 @@
 <script>
     // --- パスワード制限 ---
     (function(){
-        var password = "56";        // パスワード
+        var password = "56";        
         var redirectUrl = "https://google.com";
         var key = "sora_app_lock";
         
@@ -327,32 +341,42 @@
         window.addEventListener('DOMContentLoaded', checkAuth);
     })();
     
-    // --- Service Worker 登録 (強力な更新機能付き) ---
-    // ?v=4 というクエリパラメータをつけることで、ブラウザに強制的に新しいファイルだと認識させます
+    // --- Service Worker 登録 ---
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js?v=4').then(function(registration) {
+            registration.update(); // 起動時に更新チェック
             
-            // アプリ起動時に必ず更新チェックを行う
-            registration.update();
-
             registration.onupdatefound = function() {
                 const installingWorker = registration.installing;
                 installingWorker.onstatechange = function() {
                     if (installingWorker.state === 'installed') {
                         if (navigator.serviceWorker.controller) {
-                            console.log('新しい更新があります。リロードします...');
-                            // ここではリロードせず、下のcontrollerchangeに任せるか、
-                            // ユーザーに通知を出しても良いですが、今回は自動更新優先です。
+                            console.log('新しい更新があります。');
                         }
                     }
                 };
             };
         }).catch(console.error);
 
-        // 新しいServiceWorkerが制御を開始したらページをリロードする
         navigator.serviceWorker.addEventListener('controllerchange', () => {
             window.location.reload();
         });
+    }
+
+    // ★追加：強制更新機能（ボタンから呼び出す）
+    async function forceAppUpdate() {
+        const confirmUpdate = confirm("アプリを強制的に更新しますか？\n（記録データは消えません）");
+        if (!confirmUpdate) return;
+
+        if ('serviceWorker' in navigator) {
+            // すべてのServiceWorker登録を解除する
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            for (const registration of registrations) {
+                await registration.unregister();
+            }
+        }
+        // キャッシュを無視してリロード
+        window.location.reload(true);
     }
 
     let soraData = JSON.parse(localStorage.getItem('soraData')) || [];
@@ -381,7 +405,6 @@
         }
     };
     
-    // イベントログ処理
     function logEvent(eventName) {
         const manualInput = document.getElementById('manualTimeInput').value;
         const now = manualInput ? new Date(manualInput) : new Date();
@@ -713,7 +736,6 @@
         stopTimer();
         soraData = [];
         localStorage.removeItem('soraData');
-        // localStorage.removeItem('sora_app_lock'); // ログイン状態は維持
         
         document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
         document.getElementById('bestDurationDisplay').textContent = "（未計測）";
@@ -795,7 +817,6 @@
         const container = document.getElementById('amuletButtonsContainer');
         container.innerHTML = "";
         
-        // AMULETS変数は amulets.js から読み込まれます
         if (typeof AMULETS !== 'undefined') {
             AMULETS.forEach((amulet, index) => {
                 const btn = document.createElement('button');
