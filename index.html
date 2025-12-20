@@ -196,7 +196,7 @@
     <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
 
     <div class="timer-card">
-        <div class="app-version">v7</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
+        <div class="app-version">v1</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
         <div id="timerDisplay" class="timer-display">0日 0時間 0分 0秒</div>
         
         <div class="mt-4">
@@ -344,9 +344,9 @@
     })();
     
     // --- Service Worker 登録 (バージョン更新用) ---
-    // sw.js?v=7
+    // sw.js?v=1
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=7').then(function(registration) {
+        navigator.serviceWorker.register('./sw.js?v=1').then(function(registration) {
             registration.update();
             
             registration.onupdatefound = function() {
@@ -514,8 +514,6 @@
     }
 
     function runFunctionF() {
-        // ★修正点：soraDataのコピーではなく、参照先の内容を書き換えるために慎重に処理
-        // calculate durations based on time-ordered data (oldest -> newest)
         const orderedData = [...soraData].sort((a, b) => a.timestamp - b.timestamp);
         
         for (let i = 0; i < orderedData.length; i++) {
@@ -530,7 +528,6 @@
             let foundVomit = false;
             let targetTime = 0;
 
-            // Look for previous vomit
             for (let j = i - 1; j >= 0; j--) {
                 const pastRow = orderedData[j];
                 if (pastRow.event === '嘔吐') {
@@ -595,8 +592,6 @@
         let targetTime = 0;
         let found = false;
 
-        // find the chronologically latest event that is vomit or start
-        // soraData is sorted desc (newest first)
         const latestVomit = soraData.find(d => d.event === '嘔吐');
         
         if (latestVomit) {
@@ -642,9 +637,17 @@
             const tr = document.createElement('tr');
             const isStartRow = (row.event === 'SORA法開始');
             
+            // ★変更箇所：色分けロジックを追加
+            let eventColor = "";
+            if (row.event === "食事") {
+                eventColor = "text-success fw-bold"; // 緑・太字
+            } else if (row.event === "嘔吐") {
+                eventColor = "text-danger fw-bold"; // 赤・太字
+            }
+
             tr.innerHTML = `
                 <td>${formatDate(new Date(row.timestamp), true)}</td>
-                <td>${row.event}</td>
+                <td class="${eventColor}">${row.event}</td>
                 <td style="font-weight:bold;">${row.durationStr || "-"}</td>
                 <td><button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${row.id})" ${isStartRow ? 'disabled' : ''}>編集</button></td>
             `;
