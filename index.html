@@ -114,7 +114,6 @@
             opacity: 1;
         }
 
-        /* 無効時の共通設定（薄くする処理はここで行われます） */
         .btn-custom[disabled], .btn-custom.disabled {
             opacity: 0.4; 
             pointer-events: none; 
@@ -122,7 +121,7 @@
             box-shadow: none;
         }
 
-        /* ★変更：アミュレットボタンの設定（無効時も背景色を維持） */
+        /* アミュレットボタンの設定（無効時も背景色を維持） */
         .btn-amulet, .btn-amulet:disabled, .btn-amulet.disabled { 
             background-color: #6f42c1; 
             color: white; 
@@ -197,7 +196,7 @@
     <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
 
     <div class="timer-card">
-        <div class="app-version">v5</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
+        <div class="app-version">v7</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
         <div id="timerDisplay" class="timer-display">0日 0時間 0分 0秒</div>
         
         <div class="mt-4">
@@ -344,10 +343,10 @@
         window.addEventListener('DOMContentLoaded', checkAuth);
     })();
     
-    // --- Service Worker 登録 ---
-    // sw.js?v=5 にバージョンを合わせることを推奨
+    // --- Service Worker 登録 (バージョン更新用) ---
+    // sw.js?v=7
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=5').then(function(registration) {
+        navigator.serviceWorker.register('./sw.js?v=7').then(function(registration) {
             registration.update();
             
             registration.onupdatefound = function() {
@@ -462,6 +461,7 @@
         }
     }
 
+    // メッセージ取得関数
     function checkFeedback(eventType, ms) {
         if (eventType === 'SORA法開始') {
             document.getElementById('messageDisplay').textContent = "SORA法を開始しました。自分のペースで進めていきましょう！";
@@ -471,68 +471,28 @@
         const timeStr = getFlexibleFormat(ms);
         let msg = "";
 
-        const MIN = 60 * 1000;
-        const HOUR = 60 * MIN;
+        if (typeof FEEDBACK_DATA !== 'undefined' && FEEDBACK_DATA[eventType]) {
+            const rules = FEEDBACK_DATA[eventType];
+            for (let i = 0; i < rules.length; i++) {
+                const rule = rules[i];
+                if (rule.limit === null || ms < rule.limit) {
+                    msg = rule.message;
+                    break;
+                }
+            }
+        } else {
+            msg = "データが読み込めませんでした。";
+        }
 
         if (eventType === '食事') {
-            if (ms < 10 * MIN) {
-                msg = "その調子！";
-            } else if (ms < 20 * MIN) {
-                msg = "いい調子！";
-            } else if (ms < 30 * MIN) {
-                msg = "とてもいい調子だね！";
-            } else if (ms < 60 * MIN) { 
-                msg = "かなり頑張ってる！SORA法効いているよ！";
-            } else if (ms < 2 * HOUR) {
-                msg = "すごい！辛い時はリカバリーアミュレットも使ってね。";
-            } else if (ms < 3 * HOUR) {
-                msg = "文句なしだね！本当に頑張ってる！";
-            } else if (ms < 4 * HOUR) {
-                msg = "むちゃくちゃ頑張ってる！よくここまできたね！";
-            } else if (ms < 5 * HOUR) {
-                msg = "おめでとう！これで1食吐かなかったことになるね。ゴールは目の前！";
-            } else if (ms < 7 * HOUR) {
-                msg = "食後5時間以上吐いてないね。これでひとまず合格だよ！";
-            } else { 
-                msg = "前の食事からちょっと時間が開いてるね。辛いときはリカバリーアミュレットを使って！";
-            }
-            
             document.getElementById('messageDisplay').textContent = `いま${timeStr}嘔吐しないで過ごせています。\n${msg}`;
-
         } else if (eventType === '嘔吐') {
-            if (ms < 5 * MIN) {
-                msg = "辛いね！でも頑張ってる！リカバリーアミュレットも使ってね";
-            } else if (ms < 10 * MIN) {
-                msg = "かなりいい調子！リカバリーアミュレットを使って更に伸ばせそう。";
-            } else if (ms < 20 * MIN) {
-                msg = "これだけ我慢できたのだからとてもいい調子だ！SORAの原理を習得してきている。";
-            } else if (ms < 30 * MIN) {
-                msg = "これだけ我慢できたのだからとてもいい調子だ！SORAの原理を習得してきている。"; 
-            } else if (ms < 40 * MIN) {
-                msg = "かなり頑張ってる！SORA法確実に効いているよ！";
-            } else if (ms < 50 * MIN) { 
-                msg = "すごい！第一のゴールは近いよ！辛い時はリカバリーアミュレットだ！";
-            } else if (ms < 60 * MIN) {
-                msg = "あと一歩だ！あと一歩で1時間！";
-            } else if (ms < 70 * MIN) {
-                msg = "やった！遂に一時間吐かずにいられたね！偉業だよ！SORAの原理を完全に理解してくれたね！ありがとう！";
-            } else if (ms < 90 * MIN) {
-                msg = "SORAの原理を分かってくれたおかげで2つ目の偉業が目の前だ！";
-            } else if (ms < 120 * MIN) {
-                msg = "ついに1時間半も吐かずにいられたね！2つ目の偉業だよ。おめでとう！";
-            } else if (ms < 150 * MIN) {
-                msg = "遂に2時間達成！あとは吐くのをなにか食べるのに置き換えられたら最高だ！";
-            } else if (ms < 180 * MIN) {
-                msg = "2時間半も嘔吐を我慢できたね。本当に治ってきている。SORAの原理を信じぬいて！";
-            } else { 
-                msg = "3時間以上も嘔吐を我慢できている。最高の偉業だよ。次は吐く代わりになにか食べるのに挑戦してみて。SORAの原理とリカバリーアミュレットを組み合わせればきっと可能だよ！";
-            }
-            
             document.getElementById('messageDisplay').textContent = `${timeStr}嘔吐しないで過ごせたね。\n${msg}`;
         }
     }
 
     function getFlexibleFormat(ms) {
+        if (ms === undefined || ms === null || isNaN(ms)) return "0秒";
         const day = Math.floor(ms / (1000 * 60 * 60 * 24));
         const hour = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const min = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
@@ -554,7 +514,9 @@
     }
 
     function runFunctionF() {
-        const orderedData = [...soraData].reverse();
+        // ★修正点：soraDataのコピーではなく、参照先の内容を書き換えるために慎重に処理
+        // calculate durations based on time-ordered data (oldest -> newest)
+        const orderedData = [...soraData].sort((a, b) => a.timestamp - b.timestamp);
         
         for (let i = 0; i < orderedData.length; i++) {
             const currentRow = orderedData[i];
@@ -568,6 +530,7 @@
             let foundVomit = false;
             let targetTime = 0;
 
+            // Look for previous vomit
             for (let j = i - 1; j >= 0; j--) {
                 const pastRow = orderedData[j];
                 if (pastRow.event === '嘔吐') {
@@ -632,7 +595,10 @@
         let targetTime = 0;
         let found = false;
 
+        // find the chronologically latest event that is vomit or start
+        // soraData is sorted desc (newest first)
         const latestVomit = soraData.find(d => d.event === '嘔吐');
+        
         if (latestVomit) {
             targetTime = latestVomit.timestamp;
             found = true;
@@ -679,7 +645,7 @@
             tr.innerHTML = `
                 <td>${formatDate(new Date(row.timestamp), true)}</td>
                 <td>${row.event}</td>
-                <td style="font-weight:bold;">${row.durationStr}</td>
+                <td style="font-weight:bold;">${row.durationStr || "-"}</td>
                 <td><button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${row.id})" ${isStartRow ? 'disabled' : ''}>編集</button></td>
             `;
             tbody.appendChild(tr);
@@ -687,7 +653,7 @@
     }
 
     function formatDuration(ms) {
-        if (ms <= 0) return "-";
+        if (ms === undefined || ms === null || isNaN(ms) || ms <= 0) return "-";
         const day = Math.floor(ms / (1000 * 60 * 60 * 24));
         const hour = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const min = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
@@ -707,19 +673,6 @@
              return `${Y}年${M}月${d}日 ${h}:${m}:${s}`;
         }
         return `${M}/${d} ${h}:${m}:${s}`;
-    }
-
-    function parseDuration(durationStr) {
-        if (!durationStr || durationStr.includes("未計測") || durationStr === "-") return 0;
-        const parts = durationStr.match(/(\d+)日\s*(\d+)時間\s*(\d+)分\s*(\d+)秒/);
-        if (!parts) return 0;
-        
-        const [_, days, hours, minutes, seconds] = parts.map(Number);
-        
-        return (days * 24 * 60 * 60 * 1000) + 
-               (hours * 60 * 60 * 1000) + 
-               (minutes * 60 * 1000) + 
-               (seconds * 1000);
     }
     
     function saveData() {
@@ -787,30 +740,36 @@
 
         const targetIndex = soraData.findIndex(d => d.id === id);
         if(targetIndex > -1) {
+            // データを更新
             soraData[targetIndex].timestamp = newTimestamp;
             soraData[targetIndex].event = eventInput;
             
+            // 再ソート（降順）
             soraData.sort((a, b) => b.timestamp - a.timestamp);
             
-            runFunctionF();
-            calculateBestDuration(); 
+            // ★重要：データの再計算と再描画の順序を修正
+            runFunctionF(); // 全行の経過時間を再計算
+            calculateBestDuration(); // 最長記録を再計算
             
-            saveData();
-            editModalInstance.hide();
-            renderTable();
+            saveData(); // 保存
+            editModalInstance.hide(); // モーダル閉じる
+            renderTable(); // テーブル更新
             
+            // 最新データに基づいてタイマーとメッセージを更新
             if (soraData.length > 0) {
-                 checkFeedback(soraData[0].event, soraData[0].durationMs);
-            }
-
-            const latestEvent = soraData[0];
-            if (latestEvent && (latestEvent.event === '食事' || latestEvent.event === 'SORA法開始')) {
-                 startTimer();
-            } else if (latestEvent && latestEvent.event === '嘔吐') {
-                 stopTimer();
-                 startTimer(); 
-            } else {
-                 stopTimer();
+                 const latest = soraData[0];
+                 checkFeedback(latest.event, latest.durationMs);
+                 
+                 // タイマー制御の更新
+                 if (latest.event === '食事' || latest.event === 'SORA法開始') {
+                     startTimer();
+                 } else if (latest.event === '嘔吐') {
+                     // 嘔吐の場合は直近のリセットになるので、タイマー基準点を更新して動かす
+                     stopTimer();
+                     startTimer(); 
+                 } else {
+                     stopTimer();
+                 }
             }
         }
     }
