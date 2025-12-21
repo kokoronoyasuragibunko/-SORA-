@@ -196,7 +196,7 @@
     <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
 
     <div class="timer-card">
-        <div class="app-version">v1</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
+        <div class="app-version">v2.0</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
         <div id="timerDisplay" class="timer-display">0日 0時間 0分 0秒</div>
         
         <div class="mt-4">
@@ -344,9 +344,9 @@
     })();
     
     // --- Service Worker 登録 (バージョン更新用) ---
-    // sw.js?v=1
+    // sw.js?v=2 
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=1').then(function(registration) {
+        navigator.serviceWorker.register('./sw.js?v=2').then(function(registration) {
             registration.update();
             
             registration.onupdatefound = function() {
@@ -637,12 +637,12 @@
             const tr = document.createElement('tr');
             const isStartRow = (row.event === 'SORA法開始');
             
-            // ★変更箇所：色分けロジックを追加
+            // 色分けロジック
             let eventColor = "";
             if (row.event === "食事") {
-                eventColor = "text-success fw-bold"; // 緑・太字
+                eventColor = "text-success fw-bold";
             } else if (row.event === "嘔吐") {
-                eventColor = "text-danger fw-bold"; // 赤・太字
+                eventColor = "text-danger fw-bold";
             }
 
             tr.innerHTML = `
@@ -678,8 +678,16 @@
         return `${M}/${d} ${h}:${m}:${s}`;
     }
     
+    // ★追加：容量チェック付き保存関数
     function saveData() {
-        localStorage.setItem('soraData', JSON.stringify(soraData));
+        try {
+            localStorage.setItem('soraData', JSON.stringify(soraData));
+        } catch (e) {
+            console.error("Save failed:", e);
+            if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
+                alert("⚠️ 保存容量がいっぱいです\nこれ以上データを保存できません。\n「SORAをやり直す」ボタンで古いデータを消去してください。");
+            }
+        }
     }
     
     window.confirmReset = function() {
@@ -690,10 +698,12 @@
         }
     }
 
+    // ★変更：データを消去し、ログイン状態は維持するリセット関数
     function resetSora() {
         stopTimer();
         soraData = [];
         localStorage.removeItem('soraData');
+        // localStorage.removeItem('sora_app_lock'); // ログイン状態は維持
         
         document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
         document.getElementById('bestDurationDisplay').textContent = "（未計測）";
@@ -743,36 +753,30 @@
 
         const targetIndex = soraData.findIndex(d => d.id === id);
         if(targetIndex > -1) {
-            // データを更新
             soraData[targetIndex].timestamp = newTimestamp;
             soraData[targetIndex].event = eventInput;
             
-            // 再ソート（降順）
             soraData.sort((a, b) => b.timestamp - a.timestamp);
             
-            // ★重要：データの再計算と再描画の順序を修正
-            runFunctionF(); // 全行の経過時間を再計算
-            calculateBestDuration(); // 最長記録を再計算
+            runFunctionF();
+            calculateBestDuration(); 
             
-            saveData(); // 保存
-            editModalInstance.hide(); // モーダル閉じる
-            renderTable(); // テーブル更新
+            saveData();
+            editModalInstance.hide();
+            renderTable();
             
-            // 最新データに基づいてタイマーとメッセージを更新
             if (soraData.length > 0) {
-                 const latest = soraData[0];
-                 checkFeedback(latest.event, latest.durationMs);
-                 
-                 // タイマー制御の更新
-                 if (latest.event === '食事' || latest.event === 'SORA法開始') {
-                     startTimer();
-                 } else if (latest.event === '嘔吐') {
-                     // 嘔吐の場合は直近のリセットになるので、タイマー基準点を更新して動かす
-                     stopTimer();
-                     startTimer(); 
-                 } else {
-                     stopTimer();
-                 }
+                 checkFeedback(soraData[0].event, soraData[0].durationMs);
+            }
+
+            const latestEvent = soraData[0];
+            if (latestEvent && (latestEvent.event === '食事' || latestEvent.event === 'SORA法開始')) {
+                 startTimer();
+            } else if (latestEvent && latestEvent.event === '嘔吐') {
+                 stopTimer();
+                 startTimer(); 
+            } else {
+                 stopTimer();
             }
         }
     }
