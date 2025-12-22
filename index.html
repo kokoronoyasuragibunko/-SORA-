@@ -184,7 +184,7 @@
             background-color: #ffc107;
             color: #000;
             border: none;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             padding: 10px;
             margin-top: 5px;
         }
@@ -196,7 +196,7 @@
     <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
 
     <div class="timer-card">
-        <div class="app-version">v2.0</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
+        <div class="app-version">v1.0</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
         <div id="timerDisplay" class="timer-display">0日 0時間 0分 0秒</div>
         
         <div class="mt-4">
@@ -215,7 +215,7 @@
     <div class="mb-5">
         <div class="row mb-3">
              <div class="col-12">
-                <button id="btnStart" class="btn btn-primary btn-custom" onclick="logEvent('SORA法開始')">🚀 SORA法開始</button>
+                <button id="btnStart" class="btn btn-primary btn-custom" onclick="logEvent('SORA法開始')">🚀 嘔吐を卒業してSORA法を始める</button>
             </div>
         </div>
 
@@ -243,15 +243,25 @@
                 <button class="btn btn-secondary btn-custom" style="font-size: 0.9rem; background-color:#95a5a6; border:none;" onclick="confirmReset()">🔄 SORAをやり直す</button>
             </div>
             
-            <div class="col-12 mt-3 text-center">
-                <p style="font-size:0.8rem; color:#888; margin-bottom:5px;">アプリが更新されない場合はこちら</p>
-                <button class="btn btn-update btn-custom" onclick="forceAppUpdate()">⚡ アプリを強制更新して再読み込み</button>
+            <div class="col-12 mt-4 text-center">
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLSf9qVDwFL7LPGOwTPrvRdHycE9diykdGEnO-NN6E_SGU-oIxQ/viewform?usp=header" target="_blank" class="btn btn-outline-secondary btn-sm mb-3" style="border-radius: 20px; width: 100%;">
+                    📩 お問い合わせ
+                </a>
+
+                <hr style="opacity: 0.1; margin: 10px 0;">
+
+                <p style="font-size:0.75rem; color:#aaa; margin-bottom:5px;">アプリの調子が悪いとき</p>
+                <button class="btn btn-update btn-custom" onclick="forceAppUpdate()" style="font-size: 0.8rem; padding: 8px;">
+                    ⚡ アプリを強制更新・再読み込み
+                </button>
+                
+                <p class="mt-3" style="font-size:0.7rem; color:#ccc;">SORA Method App v1.0</p>
             </div>
-        </div>
+            </div>
     </div>
 
     <div class="history-section">
-        <h6 class="mb-3 fw-bold">📝 記録ログ</h6>
+        <h6 class="mb-3 fw-bold">📝 記録</h6>
         <div class="table-responsive">
             <table class="table table-striped align-middle">
                 <thead>
@@ -344,9 +354,9 @@
     })();
     
     // --- Service Worker 登録 (バージョン更新用) ---
-    // sw.js?v=2 
+    // sw.js?v=1 に設定
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=2').then(function(registration) {
+        navigator.serviceWorker.register('./sw.js?v=1').then(function(registration) {
             registration.update();
             
             registration.onupdatefound = function() {
@@ -678,7 +688,6 @@
         return `${M}/${d} ${h}:${m}:${s}`;
     }
     
-    // ★追加：容量チェック付き保存関数
     function saveData() {
         try {
             localStorage.setItem('soraData', JSON.stringify(soraData));
@@ -698,7 +707,6 @@
         }
     }
 
-    // ★変更：データを消去し、ログイン状態は維持するリセット関数
     function resetSora() {
         stopTimer();
         soraData = [];
@@ -766,17 +774,17 @@
             renderTable();
             
             if (soraData.length > 0) {
-                 checkFeedback(soraData[0].event, soraData[0].durationMs);
-            }
-
-            const latestEvent = soraData[0];
-            if (latestEvent && (latestEvent.event === '食事' || latestEvent.event === 'SORA法開始')) {
-                 startTimer();
-            } else if (latestEvent && latestEvent.event === '嘔吐') {
-                 stopTimer();
-                 startTimer(); 
-            } else {
-                 stopTimer();
+                 const latest = soraData[0];
+                 checkFeedback(latest.event, latest.durationMs);
+                 
+                 if (latest.event === '食事' || latest.event === 'SORA法開始') {
+                     startTimer();
+                 } else if (latest.event === '嘔吐') {
+                     stopTimer();
+                     startTimer(); 
+                 } else {
+                     stopTimer();
+                 }
             }
         }
     }
