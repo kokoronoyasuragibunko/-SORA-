@@ -1,57 +1,55 @@
-// バージョン定義：更新する時はここを書き換えます
-const CACHE_NAME = 'sora-app-v1.1';
+// キャッシュの名前（バージョン管理用）
+// index.htmlの更新に合わせて v1.4 にしています
+const CACHE_NAME = 'sora-app-v1.4';
 
-// キャッシュするファイルのリスト
+// キャッシュするファイル（オフラインでも動くように保存するファイル）
 const urlsToCache = [
-  './',
-  './index.html',
-  './amulets.js',
-  './manifest.json',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
-  'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'
+    './',
+    './index.html',
+    './amulets.js',
+    './manifest.json',
+    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css',
+    'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js'
 ];
 
-// 1. インストール時
+// インストール時の処理（ファイルを保存する）
 self.addEventListener('install', function(event) {
-  // ★追加：待機状態をスキップして、即座に新しいSWを有効にする命令
-  self.skipWaiting();
-
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(function(cache) {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-  );
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(function(cache) {
+                console.log('Opened cache');
+                return cache.addAll(urlsToCache);
+            })
+    );
 });
 
-// 2. 有効化時
+// 有効化時の処理（古いバージョンを削除する）
 self.addEventListener('activate', function(event) {
-  const cacheWhitelist = [CACHE_NAME];
-  event.waitUntil(
-    caches.keys().then(function(cacheNames) {
-      return Promise.all(
-        cacheNames.map(function(cacheName) {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            return caches.delete(cacheName);
-          }
+    event.waitUntil(
+        caches.keys().then(function(cacheNames) {
+            return Promise.all(
+                cacheNames.map(function(cacheName) {
+                    if (cacheName !== CACHE_NAME) {
+                        console.log('Deleting old cache:', cacheName);
+                        return caches.delete(cacheName);
+                    }
+                })
+            );
         })
-      );
-    })
-    // ★追加：すぐに全てのページのコントロールを開始する命令
-    .then(() => self.clients.claim())
-  );
+    );
 });
 
-// 3. 通信時
+// 通信時の処理（保存したファイルを優先して表示する）
 self.addEventListener('fetch', function(event) {
-  event.respondWith(
-    caches.match(event.request)
-      .then(function(response) {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
-  );
+    event.respondWith(
+        caches.match(event.request)
+            .then(function(response) {
+                // キャッシュにあればそれを返す
+                if (response) {
+                    return response;
+                }
+                // なければインターネットに取りに行く
+                return fetch(event.request);
+            })
+    );
 });

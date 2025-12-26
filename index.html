@@ -196,7 +196,7 @@
     <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
 
     <div class="timer-card">
-        <div class="app-version">v1.0</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
+        <div class="app-version">v1.4</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
         <div id="timerDisplay" class="timer-display">0日 0時間 0分 0秒</div>
         
         <div class="mt-4">
@@ -255,9 +255,9 @@
                     ⚡ アプリを強制更新・再読み込み
                 </button>
                 
-                <p class="mt-3" style="font-size:0.7rem; color:#ccc;">SORA Method App v1.0</p>
+                <p class="mt-3" style="font-size:0.7rem; color:#ccc;">SORA Method App v1.4</p>
             </div>
-            </div>
+        </div>
     </div>
 
     <div class="history-section">
@@ -354,9 +354,9 @@
     })();
     
     // --- Service Worker 登録 (バージョン更新用) ---
-    // sw.js?v=1
+    // sw.js?v=1.4
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=1').then(function(registration) {
+        navigator.serviceWorker.register('./sw.js?v=1.4').then(function(registration) {
             registration.update();
             
             registration.onupdatefound = function() {
@@ -404,9 +404,8 @@
         calculateBestDuration(); 
         renderTable();
         
-        if (soraData.length > 0) {
-            checkFeedback(soraData[0].event, soraData[0].durationMs);
-        }
+        // 初回ロード時の表示更新
+        updateAllDisplays();
 
         const latestEvent = soraData[0];
         if (latestEvent && (latestEvent.event === '食事' || latestEvent.event === 'SORA法開始')) {
@@ -415,6 +414,34 @@
              updateTimer(false); 
         }
     };
+
+    // ★追加：画面がアクティブになったら表示を更新する
+    document.addEventListener("visibilitychange", function() {
+        if (document.visibilityState === 'visible') {
+            updateAllDisplays();
+        }
+    });
+    // 一応フォーカス時も更新
+    window.addEventListener("focus", function() {
+        updateAllDisplays();
+    });
+
+    // まとめて画面を更新する関数
+    function updateAllDisplays() {
+        if (soraData.length > 0) {
+            // 時間の再計算
+            runFunctionF();
+            calculateBestDuration();
+            renderTable();
+            
+            // タイマー表示の更新
+            updateTimer(!!timerInterval);
+            
+            // メッセージの更新
+            const latestLog = soraData[0];
+            checkFeedback(latestLog.event, latestLog.durationMs);
+        }
+    }
     
     function logEvent(eventName) {
         const manualInput = document.getElementById('manualTimeInput').value;
@@ -457,21 +484,14 @@
             startTimer();
         }
 
-        runFunctionF(); 
-        calculateBestDuration(); 
+        updateAllDisplays();
         
         saveData();
         document.getElementById('manualTimeInput').value = '';
         updateButtonState();
-        renderTable();
-
-        const latestLog = soraData[0];
-        if (latestLog) {
-            checkFeedback(eventName, latestLog.durationMs);
-        }
     }
 
-    // メッセージ取得関数
+    // メッセージ取得関数（関数型対応）
     function checkFeedback(eventType, ms) {
         if (eventType === 'SORA法開始') {
             document.getElementById('messageDisplay').textContent = "SORA法を開始しました。自分のペースで進めていきましょう！";
@@ -486,7 +506,12 @@
             for (let i = 0; i < rules.length; i++) {
                 const rule = rules[i];
                 if (rule.limit === null || ms < rule.limit) {
-                    msg = rule.message;
+                    // 関数なら実行、文字列ならそのまま
+                    if (typeof rule.message === 'function') {
+                        msg = rule.message(ms);
+                    } else {
+                        msg = rule.message;
+                    }
                     break;
                 }
             }
@@ -711,7 +736,6 @@
         stopTimer();
         soraData = [];
         localStorage.removeItem('soraData');
-        // localStorage.removeItem('sora_app_lock'); // ログイン状態は維持
         
         document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
         document.getElementById('bestDurationDisplay').textContent = "（未計測）";
@@ -766,8 +790,7 @@
             
             soraData.sort((a, b) => b.timestamp - a.timestamp);
             
-            runFunctionF();
-            calculateBestDuration(); 
+            updateAllDisplays();
             
             saveData();
             editModalInstance.hide();
