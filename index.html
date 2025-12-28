@@ -87,7 +87,7 @@
             margin-top: 15px;
         }
         .message-label { font-size: 0.9rem; color: #084298; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; }
-        .message-value { font-size: 1.0rem; color: #333; white-space: pre-wrap; line-height: 1.6; }
+        .message-value { font-size: 1.0rem; color: #333; line-height: 1.6; } /* white-spaceはJSで制御するため削除 */
 
         .action-group-box {
             background-color: #fff;
@@ -489,17 +489,19 @@
         updateButtonState();
     }
 
-    // メッセージ取得関数（関数型対応 & 食事間隔警告追加）
+    // ★重要：メッセージ取得関数（警告機能を追加しました！）
     function checkFeedback(eventType, ms) {
+        const displayEl = document.getElementById('messageDisplay');
+
         if (eventType === 'SORA法開始') {
-            document.getElementById('messageDisplay').textContent = "SORA法を開始しました。自分のペースで進めていきましょう！";
+            displayEl.textContent = "SORA法を開始しました。自分のペースで進めていきましょう！";
             return;
         }
 
-        // 基本メッセージの取得（前回嘔吐からの経過時間）
         const timeStr = getFlexibleFormat(ms);
         let msg = "";
 
+        // 通常のメッセージ取得
         if (typeof FEEDBACK_DATA !== 'undefined' && FEEDBACK_DATA[eventType]) {
             const rules = FEEDBACK_DATA[eventType];
             for (let i = 0; i < rules.length; i++) {
@@ -517,49 +519,56 @@
             msg = "データが読み込めませんでした。";
         }
 
-        // 基本メッセージの作成
-        let finalMessage = "";
-        if (eventType === '食事') {
-            finalMessage = `いま${timeStr}嘔吐しないで過ごせています。\n${msg}`;
-        } else if (eventType === '嘔吐') {
-            finalMessage = `${timeStr}嘔吐しないで過ごせたね。\n${msg}`;
-        }
-
-        // ★追加：食事の場合、前回の食事時刻と比較して警告を出す処理
+        // ▼▼▼ 警告機能：前回食事からの経過時間をチェック ▼▼▼
         let warningHtml = "";
         if (eventType === '食事') {
-            // 今記録した最新のデータ
-            const currentData = soraData[0]; 
-            const currentTs = currentData.timestamp;
-
-            // 1つ前以前のログから「食事」または「開始」を探す
-            let lastMealTs = null;
+            // 現在のイベントの時刻
+            const currentTimestamp = soraData[0].timestamp;
+            
+            // 過去に遡って、一つ前の「食事」か「SORA法開始」を探す
+            // soraData[0]は今記録したものなので、index=1から過去へ探索
+            let prevMealTime = null;
             for (let i = 1; i < soraData.length; i++) {
-                if (soraData[i].event === '食事') {
-                    lastMealTs = soraData[i].timestamp;
-                    break;
-                } else if (soraData[i].event === 'SORA法開始') {
-                    lastMealTs = soraData[i].timestamp;
+                if (soraData[i].event === '食事' || soraData[i].event === 'SORA法開始') {
+                    prevMealTime = soraData[i].timestamp;
                     break;
                 }
             }
 
-            // 前回が見つかったら差分を計算
-            if (lastMealTs !== null) {
-                const diff = currentTs - lastMealTs;
-                const hours = diff / (1000 * 60 * 60);
-                
-                // 11時間以上経過していたら警告
-                if (hours >= 11) {
-                    warningHtml = `<br><br><span style="color:red; font-weight:bold;">⚠️前回食事から12時間以上経っています⚠️</span>`;
+            if (prevMealTime !== null) {
+                const diff = currentTimestamp - prevMealTime;
+                // 12時間 = 12 * 60 * 60 * 1000 ミリ秒
+                if (diff >= 12 * 60 * 60 * 1000) {
+                    warningHtml = '<br><br><strong style="color:red;">⚠️前回食事から12時間以上経っています⚠️</strong>';
                 }
             }
         }
+        // ▲▲▲ 警告機能ここまで ▲▲▲
 
-        // 表示の更新（innerHTMLでタグを有効化）
-        // 改行コード(\n)を<br>タグに変換して表示
-        const displayEl = document.getElementById('messageDisplay');
-        displayEl.innerHTML = finalMessage.replace(/\n/g, '<br>') + warningHtml;
+        // 表示の構築（HTMLタグを使えるようにinnerHTMLを使用）
+        if (eventType === '食事') {
+            const fullText = `いま${timeStr}嘔吐しないで過ごせています。\n${msg}`;
+            // 改行コードを<br>に変換して表示
+            displayEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>') + warningHtml;
+        } else if (eventType === '嘔吐') {
+            const fullText = `${timeStr}嘔吐しないで過ごせたね。\n${msg}`;
+            displayEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>');
+        }
+    }
+
+    // HTMLエスケープ用関数（セキュリティ対策）
+    function escapeHtml(str) {
+        if (!str) return "";
+        return str.replace(/[&<>"']/g, function(match) {
+            const escape = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            };
+            return escape[match];
+        });
     }
 
     function getFlexibleFormat(ms) {
@@ -772,7 +781,6 @@
         stopTimer();
         soraData = [];
         localStorage.removeItem('soraData');
-        // localStorage.removeItem('sora_app_lock'); // ログイン状態は維持
         
         document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
         document.getElementById('bestDurationDisplay').textContent = "（未計測）";
