@@ -1,6 +1,6 @@
 // キャッシュの名前（バージョン管理用）
 // index.htmlの更新に合わせて v1.4 にしています
-const CACHE_NAME = 'sora-app-v1.8';
+const CACHE_NAME = 'sora-app-v1.1';
 
 // キャッシュするファイル（オフラインでも動くように保存するファイル）
 const urlsToCache = [
