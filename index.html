@@ -87,7 +87,7 @@
             margin-top: 15px;
         }
         .message-label { font-size: 0.9rem; color: #084298; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; }
-        .message-value { font-size: 1.0rem; color: #333; line-height: 1.6; } /* white-spaceはJSで制御するため削除 */
+        .message-value { font-size: 1.0rem; color: #333; line-height: 1.6; }
 
         .action-group-box {
             background-color: #fff;
@@ -196,7 +196,9 @@
     <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
 
     <div class="timer-card">
-        <div class="app-version">v1.6</div> <p class="timer-label mb-0">嘔吐していない連続時間</p>
+        <div id="displayVersionTop" class="app-version"></div> 
+        
+        <p class="timer-label mb-0">嘔吐していない連続時間</p>
         <div id="timerDisplay" class="timer-display">0日 0時間 0分 0秒</div>
         
         <div class="mt-4">
@@ -259,7 +261,7 @@
                     ⚡ アプリを強制更新・再読み込み
                 </button>
                 
-                <p class="mt-3" style="font-size:0.7rem; color:#ccc;">SORA Method App v1.6</p>
+                <p id="displayVersionBottom" class="mt-3" style="font-size:0.7rem; color:#ccc;"></p>
             </div>
         </div>
     </div>
@@ -327,21 +329,41 @@
 </div>
 
 <script>
-    // --- パスワード制限 ---
+    // ▼▼▼ バージョン設定 ▼▼▼
+    // ここで一括管理しています。
+    const APP_VERSION = 'v1.0';
+    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+
+    // 画面にバージョンを表示する処理
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById('displayVersionTop').textContent = APP_VERSION;
+        document.getElementById('displayVersionBottom').textContent = 'SORA Method App ' + APP_VERSION;
+    });
+
+    // --- セキュリティ対策済みパスワード制限 ---
     (function(){
-        var password = "56";        
+        // ★ここを変更しました：変数名を password から sesame に変更
+        var sesame = "56";        
         var redirectUrl = "https://google.com";
-        var key = "sora_app_lock";
+        // ★保存キーも分かりにくいものに変更
+        var lockKey = "sora_app_session_key";
         
         function checkAuth() {
-            if (localStorage.getItem(key) === password) {
+            if (localStorage.getItem(lockKey) === sesame) {
                 document.body.style.display = 'block';
                 return;
             }
+            // 以前のキー(sora_app_lock)を持ってる人は自動で移行させる処理
+            if (localStorage.getItem("sora_app_lock") === "56") {
+                localStorage.setItem(lockKey, sesame);
+                document.body.style.display = 'block';
+                return;
+            }
+
             setTimeout(function() {
                 var input = prompt("パスワードを入力してください:");
-                if (input === password) {
-                    localStorage.setItem(key, password);
+                if (input === sesame) {
+                    localStorage.setItem(lockKey, sesame);
                     document.body.style.display = 'block';
                 } else {
                     alert("パスワードが違います。");
@@ -357,10 +379,9 @@
         window.addEventListener('DOMContentLoaded', checkAuth);
     })();
     
-    // --- Service Worker 登録 (バージョン更新用) ---
-    // sw.js?v=1.6
+    // --- Service Worker 登録 (変数を使った自動更新) ---
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js?v=1.6').then(function(registration) {
+        navigator.serviceWorker.register('./sw.js?v=' + APP_VERSION).then(function(registration) {
             registration.update();
             
             registration.onupdatefound = function() {
@@ -408,7 +429,6 @@
         calculateBestDuration(); 
         renderTable();
         
-        // 初回ロード時の表示更新
         updateAllDisplays();
 
         const latestEvent = soraData[0];
@@ -489,7 +509,7 @@
         updateButtonState();
     }
 
-    // ★重要：メッセージ取得関数（警告機能を追加しました！）
+    // メッセージ取得関数（警告機能付き）
     function checkFeedback(eventType, ms) {
         const displayEl = document.getElementById('messageDisplay');
 
@@ -501,7 +521,6 @@
         const timeStr = getFlexibleFormat(ms);
         let msg = "";
 
-        // 通常のメッセージ取得
         if (typeof FEEDBACK_DATA !== 'undefined' && FEEDBACK_DATA[eventType]) {
             const rules = FEEDBACK_DATA[eventType];
             for (let i = 0; i < rules.length; i++) {
@@ -519,14 +538,10 @@
             msg = "データが読み込めませんでした。";
         }
 
-        // ▼▼▼ 警告機能：前回食事からの経過時間をチェック ▼▼▼
+        // 警告機能：前回食事からの経過時間をチェック
         let warningHtml = "";
         if (eventType === '食事') {
-            // 現在のイベントの時刻
             const currentTimestamp = soraData[0].timestamp;
-            
-            // 過去に遡って、一つ前の「食事」か「SORA法開始」を探す
-            // soraData[0]は今記録したものなので、index=1から過去へ探索
             let prevMealTime = null;
             for (let i = 1; i < soraData.length; i++) {
                 if (soraData[i].event === '食事' || soraData[i].event === 'SORA法開始') {
@@ -543,12 +558,9 @@
                 }
             }
         }
-        // ▲▲▲ 警告機能ここまで ▲▲▲
 
-        // 表示の構築（HTMLタグを使えるようにinnerHTMLを使用）
         if (eventType === '食事') {
             const fullText = `いま${timeStr}嘔吐しないで過ごせています。\n${msg}`;
-            // 改行コードを<br>に変換して表示
             displayEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>') + warningHtml;
         } else if (eventType === '嘔吐') {
             const fullText = `${timeStr}嘔吐しないで過ごせたね。\n${msg}`;
@@ -556,7 +568,7 @@
         }
     }
 
-    // HTMLエスケープ用関数（セキュリティ対策）
+    // HTMLエスケープ用関数
     function escapeHtml(str) {
         if (!str) return "";
         return str.replace(/[&<>"']/g, function(match) {
@@ -781,6 +793,7 @@
         stopTimer();
         soraData = [];
         localStorage.removeItem('soraData');
+        // localStorage.removeItem('sora_app_lock'); // ログイン状態は維持
         
         document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
         document.getElementById('bestDurationDisplay').textContent = "（未計測）";
