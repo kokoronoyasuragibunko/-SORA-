@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-C5192FRPE2"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-C5192FRPE2"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
 
-  gtag('config', 'G-C5192FRPE2');
-</script>
+      gtag('config', 'G-C5192FRPE2');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SORA法 アプリ</title>
@@ -130,7 +129,7 @@
             box-shadow: none;
         }
 
-        /* アミュレットボタンの設定（無効時も背景色を維持） */
+        /* アミュレットボタンの設定 */
         .btn-amulet, .btn-amulet:disabled, .btn-amulet.disabled { 
             background-color: #6f42c1; 
             color: white; 
@@ -138,6 +137,15 @@
             margin-bottom: 12px;
         }
         .btn-amulet:hover { background-color: #59359a; color: white; }
+
+        /* 記録ボタンの設定 */
+        .btn-history, .btn-history:disabled {
+            background-color: #198754; /* 緑系 */
+            color: white;
+            border: none;
+            margin-bottom: 12px;
+        }
+        .btn-history:hover { background-color: #157347; color: white; }
 
         .history-section { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .table-responsive { font-size: 0.85rem; }
@@ -197,6 +205,16 @@
             padding: 10px;
             margin-top: 5px;
         }
+
+        .usage-text {
+            background: #fff;
+            padding: 20px;
+            border-radius: 15px;
+            line-height: 1.8;
+            font-size: 1rem;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
     </style>
 </head>
 <body>
@@ -212,7 +230,7 @@
         
         <div class="mt-4">
             <div class="record-box best-record-box">
-                <div class="best-record-label">🏆 嘔吐せずにいられた時間の最長記録</div>
+                <div class="best-record-label">🏆 嘔吐せずにいられた最長時間</div>
                 <div id="bestDurationDisplay" class="best-record-value">（未計測）</div>
             </div>
         </div>
@@ -224,7 +242,10 @@
     </div>
 
     <div class="mb-5">
-        <div class="row mb-3">
+        <div class="row mb-3 g-2">
+             <div class="col-12">
+                <button class="btn btn-outline-primary btn-custom mb-2" onclick="showUsageView()" style="padding: 10px; font-size: 1rem;">📖 使い方を見る</button>
+             </div>
              <div class="col-12">
                 <button id="btnStart" class="btn btn-primary btn-custom" onclick="logEvent('SORA法開始')">🚀 嘔吐を卒業してSORA法を始める</button>
             </div>
@@ -251,7 +272,10 @@
                 <button id="btnAmulet" class="btn btn-amulet btn-custom disabled" onclick="showAmuletList()">🛡️ リカバリーアミュレット</button>
             </div>
             <div class="col-12">
-                <button class="btn btn-secondary btn-custom" style="font-size: 0.9rem; background-color:#95a5a6; border:none;" onclick="confirmReset()">🔄 SORAをやり直す</button>
+                <button id="btnHistory" class="btn btn-history btn-custom" onclick="showHistoryView()">📝 記録を見る</button>
+            </div>
+            <div class="col-12">
+                <button class="btn btn-secondary btn-custom" style="font-size: 0.9rem; background-color:#95a5a6; border:none;" onclick="confirmReset()">🔄 SORA法をやり直す</button>
             </div>
             
             <div class="col-12 mt-4 text-center">
@@ -274,9 +298,30 @@
             </div>
         </div>
     </div>
+</div>
+
+<div id="usageView" class="container py-3 view-section" style="max-width: 600px;">
+    <h4 class="text-center mb-4" style="color: #0d6efd; font-weight:bold;">📖 使い方</h4>
+    <div class="usage-text">
+        <p><strong>①「嘔吐を卒業してSORA法を始める」を押す</strong><br>
+        まずはこのボタンを押してスタートしましょう。</p>
+        
+        <p><strong>②「食事」または「嘔吐」を記録する</strong><br>
+        食事をしたり、嘔吐してしまった時はボタンを押して記録します。<br>
+        ※時間を遡って記録したい場合は、下の時間入力欄に入れてからボタンを押してください。</p>
+        
+        <p><strong>③ 21日間を目指す</strong><br>
+        「嘔吐せずにいられた最長時間」が21日間を超えたらゴールです！</p>
+    </div>
+    <button class="btn btn-secondary back-top-btn" onclick="showMainView()">🏠 TOPへ戻る</button>
+</div>
+
+<div id="historyView" class="container py-3 view-section" style="max-width: 600px;">
+    <h4 class="text-center mb-3" style="color: #198754; font-weight:bold;">📝 記録一覧</h4>
+    
+    <button class="btn btn-outline-secondary w-100 mb-3" onclick="showMainView()">🔙 戻る</button>
 
     <div class="history-section">
-        <h6 class="mb-3 fw-bold">📝 記録</h6>
         <div class="table-responsive">
             <table class="table table-striped align-middle">
                 <thead>
@@ -291,6 +336,8 @@
             </table>
         </div>
     </div>
+
+    <button class="btn btn-secondary back-top-btn" onclick="showMainView()">🏠 TOPへ戻る</button>
 </div>
 
 <div id="amuletListView" class="container py-3 view-section" style="max-width: 600px;">
@@ -312,7 +359,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title">記録の編集</h5>
+        <h5 class="modal-title">記録の編集・削除</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
@@ -328,6 +375,10 @@
                 <option value="嘔吐">嘔吐</option>
             </select>
         </div>
+        <hr>
+        <div class="text-end">
+            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteEntry()">🗑️ この記録を削除する</button>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
@@ -339,8 +390,7 @@
 
 <script>
     // ▼▼▼ バージョン設定 ▼▼▼
-    // ここで一括管理しています。
-    const APP_VERSION = 'v1.9';
+    const APP_VERSION = 'v1.15';
     // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
 
     // 画面にバージョンを表示する処理
@@ -349,12 +399,10 @@
         document.getElementById('displayVersionBottom').textContent = 'SORA Method App ' + APP_VERSION;
     });
 
-    // --- セキュリティ対策済みパスワード制限 ---
+    // --- セキュリティ対策済みパスワード制限 (sesame) ---
     (function(){
-        // ★ここを変更しました：変数名を password から sesame に変更
         var sesame = "56";        
         var redirectUrl = "https://google.com";
-        // ★保存キーも分かりにくいものに変更
         var lockKey = "sora_app_session_key";
         
         function checkAuth() {
@@ -362,7 +410,6 @@
                 document.body.style.display = 'block';
                 return;
             }
-            // 以前のキー(sora_app_lock)を持ってる人は自動で移行させる処理
             if (localStorage.getItem("sora_app_lock") === "56") {
                 localStorage.setItem(lockKey, sesame);
                 document.body.style.display = 'block';
@@ -388,7 +435,7 @@
         window.addEventListener('DOMContentLoaded', checkAuth);
     })();
     
-    // --- Service Worker 登録 (変数を使った自動更新) ---
+    // --- Service Worker 登録 ---
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js?v=' + APP_VERSION).then(function(registration) {
             registration.update();
@@ -448,7 +495,7 @@
         }
     };
 
-    // 画面がアクティブになったら表示を更新する
+    // 画面アクティブ時の更新
     document.addEventListener("visibilitychange", function() {
         if (document.visibilityState === 'visible') {
             updateAllDisplays();
@@ -458,7 +505,6 @@
         updateAllDisplays();
     });
 
-    // まとめて画面を更新する関数
     function updateAllDisplays() {
         if (soraData.length > 0) {
             runFunctionF();
@@ -518,7 +564,6 @@
         updateButtonState();
     }
 
-    // メッセージ取得関数（警告機能付き）
     function checkFeedback(eventType, ms) {
         const displayEl = document.getElementById('messageDisplay');
 
@@ -547,7 +592,7 @@
             msg = "データが読み込めませんでした。";
         }
 
-        // 警告機能：前回食事からの経過時間をチェック
+        // 警告機能
         let warningHtml = "";
         if (eventType === '食事') {
             const currentTimestamp = soraData[0].timestamp;
@@ -561,7 +606,6 @@
 
             if (prevMealTime !== null) {
                 const diff = currentTimestamp - prevMealTime;
-                // 12時間 = 12 * 60 * 60 * 1000 ミリ秒
                 if (diff >= 12 * 60 * 60 * 1000) {
                     warningHtml = '<br><br><strong style="color:red;">⚠️前回食事から12時間以上経っています⚠️</strong>';
                 }
@@ -577,17 +621,10 @@
         }
     }
 
-    // HTMLエスケープ用関数
     function escapeHtml(str) {
         if (!str) return "";
         return str.replace(/[&<>"']/g, function(match) {
-            const escape = {
-                '&': '&amp;',
-                '<': '&lt;',
-                '>': '&gt;',
-                '"': '&quot;',
-                "'": '&#39;'
-            };
+            const escape = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
             return escape[match];
         });
     }
@@ -738,7 +775,6 @@
             const tr = document.createElement('tr');
             const isStartRow = (row.event === 'SORA法開始');
             
-            // 色分けロジック
             let eventColor = "";
             if (row.event === "食事") {
                 eventColor = "text-success fw-bold";
@@ -772,10 +808,7 @@
         const h = ("0" + date.getHours()).slice(-2);
         const m = ("0" + date.getMinutes()).slice(-2);
         const s = ("0" + date.getSeconds()).slice(-2);
-        
-        if(includeYear) {
-             return `${Y}年${M}月${d}日 ${h}:${m}:${s}`;
-        }
+        if(includeYear) return `${Y}年${M}月${d}日 ${h}:${m}:${s}`;
         return `${M}/${d} ${h}:${m}:${s}`;
     }
     
@@ -785,14 +818,13 @@
         } catch (e) {
             console.error("Save failed:", e);
             if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-                alert("⚠️ 保存容量がいっぱいです\nこれ以上データを保存できません。\n「SORAをやり直す」ボタンで古いデータを消去してください。");
+                alert("⚠️ 保存容量がいっぱいです\nこれ以上データを保存できません。");
             }
         }
     }
     
     window.confirmReset = function() {
         const confirmResult = confirm("SORAの記録データをすべて消去して、最初からやり直しますか？\n（この操作は元に戻せません）");
-        
         if (confirmResult) {
             resetSora();
         }
@@ -802,12 +834,9 @@
         stopTimer();
         soraData = [];
         localStorage.removeItem('soraData');
-        // localStorage.removeItem('sora_app_lock'); // ログイン状態は維持
-        
         document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
         document.getElementById('bestDurationDisplay').textContent = "（未計測）";
         document.getElementById('messageDisplay').textContent = "（ここにメッセージが表示されます）";
-        
         updateButtonState();
         renderTable();
         location.reload(); 
@@ -816,12 +845,10 @@
     function openEdit(id) {
         const target = soraData.find(d => d.id === id);
         if(!target) return;
-        
         if (target.event === 'SORA法開始') {
             alert("「SORA法開始」イベントは編集できません。");
             return;
         }
-
         document.getElementById('editId').value = target.id;
         document.getElementById('editEvent').value = target.event;
         const date = new Date(target.timestamp);
@@ -838,7 +865,6 @@
         
         const newTimestamp = new Date(timeInput).getTime();
         const nowMs = new Date().getTime();
-
         if (newTimestamp > nowMs) {
             alert("未来の日時は入力できません。");
             return;
@@ -854,11 +880,9 @@
         if(targetIndex > -1) {
             soraData[targetIndex].timestamp = newTimestamp;
             soraData[targetIndex].event = eventInput;
-            
             soraData.sort((a, b) => b.timestamp - a.timestamp);
             
             updateAllDisplays();
-            
             saveData();
             editModalInstance.hide();
             renderTable();
@@ -866,7 +890,6 @@
             if (soraData.length > 0) {
                  const latest = soraData[0];
                  checkFeedback(latest.event, latest.durationMs);
-                 
                  if (latest.event === '食事' || latest.event === 'SORA法開始') {
                      startTimer();
                  } else if (latest.event === '嘔吐') {
@@ -879,10 +902,47 @@
         }
     }
 
+    // ★新機能：記録の削除
+    function deleteEntry() {
+        const id = parseInt(document.getElementById('editId').value);
+        if (!confirm("本当にこの記録を削除しますか？\n（削除後は元に戻せません）")) return;
+
+        // 削除処理
+        soraData = soraData.filter(d => d.id !== id);
+        
+        // 再計算と画面更新
+        updateAllDisplays();
+        saveData();
+        
+        // モーダルを閉じる
+        editModalInstance.hide();
+        renderTable();
+
+        // 削除後にデータが残っているかチェックしてタイマー制御
+        if (soraData.length > 0) {
+             const latest = soraData[0];
+             checkFeedback(latest.event, latest.durationMs);
+             if (latest.event === '食事' || latest.event === 'SORA法開始') {
+                 startTimer();
+             } else if (latest.event === '嘔吐') {
+                 stopTimer();
+                 startTimer();
+             } else {
+                 stopTimer();
+             }
+        } else {
+            // 全削除された場合
+            stopTimer();
+            document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
+            document.getElementById('bestDurationDisplay').textContent = "（未計測）";
+            document.getElementById('messageDisplay').textContent = "（ここにメッセージが表示されます）";
+            updateButtonState();
+        }
+    }
+
     function createAmuletButtons() {
         const container = document.getElementById('amuletButtonsContainer');
         container.innerHTML = "";
-        
         if (typeof AMULETS !== 'undefined') {
             AMULETS.forEach((amulet, index) => {
                 const btn = document.createElement('button');
@@ -896,9 +956,22 @@
         }
     }
 
+    // 画面切り替え用関数群
     function showMainView() {
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('mainView').classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    function showUsageView() {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.getElementById('usageView').classList.add('active');
+        window.scrollTo(0, 0);
+    }
+
+    function showHistoryView() {
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.getElementById('historyView').classList.add('active');
         window.scrollTo(0, 0);
     }
 
@@ -912,12 +985,10 @@
         const data = AMULETS[index];
         document.getElementById('amuletDetailTitle').textContent = data.title;
         document.getElementById('amuletDetailText').textContent = data.content;
-        
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('amuletContentView').classList.add('active');
         window.scrollTo(0, 0);
     }
-
 </script>
 </body>
 </html>
