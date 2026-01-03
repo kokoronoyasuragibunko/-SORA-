@@ -10,7 +10,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SORA法 アプリ v0.91</title>
+    <title>SORA法 アプリ v0.95</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -25,22 +25,104 @@
     
     <meta name="theme-color" content="#f0f4f8">
     <style>
-        body { background-color: #fcfcfc; font-family: "Helvetica Neue", Arial, sans-serif; user-select: none; padding-bottom: 50px; display: none; }
+        body { 
+            background-image: url('0.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            background-color: #fcfcfc;
+            
+            font-family: "Helvetica Neue", Arial, sans-serif; 
+            user-select: none; 
+            padding-bottom: 50px; 
+            display: none; 
+        }
+
         .view-section { display: none; }
         .view-section.active { display: block; }
         
+        /* --- 背景透過の調整ここから --- */
+        /* 透明度を0.95から0.4に変更し、枠線を少し薄くしました */
+        
         .timer-card { 
-            background: white; 
+            background: rgba(255, 255, 255, 0.4); /* ←ここを変更 */
             border-radius: 20px; 
             padding: 25px 15px; 
-            box-shadow: 0 8px 15px rgba(0,100,255,0.1); 
+            box-shadow: 0 8px 15px rgba(0, 100, 255, 0.1); 
             margin-bottom: 25px; 
             text-align: center; 
-            border: 1px solid #e1e8ed;
+            border: 1px solid rgba(255, 255, 255, 0.5); /* 枠線も半透明に */
             position: relative;
+            backdrop-filter: blur(5px); /* すりガラス効果を追加（対応ブラウザのみ） */
         }
 
-        .app-version { position: absolute; top: 10px; right: 15px; font-size: 0.7rem; color: #ccc; }
+        .action-group-box { 
+            background-color: rgba(255, 255, 255, 0.4); /* ←ここを変更 */
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px; 
+            padding: 20px 15px; 
+            margin-bottom: 15px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            backdrop-filter: blur(5px);
+        }
+        
+        .history-section { 
+            background: rgba(255, 255, 255, 0.4); /* ←ここを変更 */
+            border-radius: 15px; 
+            padding: 15px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .amulet-content-box { 
+            background: rgba(255, 255, 255, 0.4); /* ←ここを変更 */
+            padding: 20px; 
+            border-radius: 15px; 
+            line-height: 1.8; 
+            font-size: 1rem; 
+            white-space: pre-wrap; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+        }
+        
+        .usage-text { 
+            background: rgba(255, 255, 255, 0.4); /* ←ここを変更 */
+            padding: 20px; 
+            border-radius: 15px; 
+            line-height: 1.8; 
+            font-size: 1rem; 
+            color: #333; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .amulet-title { 
+            color: #6f42c1; 
+            font-weight: bold; 
+            border-bottom: 1px solid rgba(111, 66, 193, 0.3); 
+            padding-bottom: 10px; 
+            margin-bottom: 10px; 
+            background: rgba(255, 255, 255, 0.5); /* タイトルは少し濃い目に */
+            padding: 10px; 
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+
+        /* その他の細かい調整 */
+        .message-box { background-color: rgba(231, 241, 255, 0.7); border: 1px solid rgba(182, 212, 254, 0.7); }
+        .best-record-box { background-color: rgba(255, 250, 240, 0.7); border: 1px solid rgba(254, 235, 200, 0.7); }
+        .date-input-container { background: rgba(248, 249, 250, 0.6); border: 1px solid rgba(222, 226, 230, 0.6); }
+        .amulet-list-btn { background-color: rgba(255, 255, 255, 0.7); border: 1px solid rgba(221, 221, 221, 0.7); }
+        .amulet-list-btn:hover { background-color: rgba(240, 244, 248, 0.9); }
+        
+        /* --- 背景透過の調整ここまで --- */
+
+
+        .app-version { position: absolute; top: 10px; right: 15px; font-size: 0.7rem; color: #555; }
         
         /* メインタイマー */
         .timer-display { 
@@ -50,14 +132,14 @@
             font-variant-numeric: tabular-nums; 
             margin: 5px 0; 
             line-height: 1.2; 
-            text-shadow: 1px 1px 0px rgba(0,0,0,0.05); 
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.5); 
             white-space: nowrap; 
         }
 
         /* ラベルのスタイルを共通化 */
         .timer-label, .best-record-label { 
             font-size: 1.2rem; 
-            color: #555; 
+            color: #333; 
             font-weight: bold; 
             margin-bottom: 5px; 
         }
@@ -76,17 +158,17 @@
             height: 150px;
             object-fit: contain;
             margin-bottom: 10px;
-            background-color: #fafafa; 
+            background-color: rgba(250, 250, 250, 0.5); 
             border-radius: 50%;
-            border: 4px solid #fff;
+            border: 4px solid rgba(255, 255, 255, 0.8);
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         .sora-countdown {
             font-size: 0.9rem;
-            color: #888;
+            color: #666;
             font-weight: bold;
-            background: #f8f9fa;
+            background: rgba(248, 249, 250, 0.7);
             padding: 5px 12px;
             border-radius: 15px;
             display: inline-block;
@@ -102,13 +184,6 @@
             justify-content: center;
             align-items: center;
         }
-
-        .best-record-box { 
-            background-color: #fffaf0; 
-            border: 2px solid #feebc8; 
-            width: 100%; 
-            margin-top: 10px;
-        }
         
         .best-record-value { 
             font-size: clamp(1.8rem, 7vw, 3rem);
@@ -117,13 +192,12 @@
             line-height: 1.2; 
             white-space: nowrap;
             font-variant-numeric: tabular-nums;
-            text-shadow: 1px 1px 0px rgba(0,0,0,0.05);
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
         }
 
-        .message-box { background-color: #e7f1ff; border: 2px solid #b6d4fe; border-radius: 10px; padding: 15px; text-align: left; margin-top: 15px; }
+        .message-box { border-radius: 10px; padding: 15px; text-align: left; margin-top: 15px; }
         .message-label { font-size: 0.9rem; color: #084298; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; }
-        .message-value { font-size: 1.0rem; color: #333; line-height: 1.6; }
-        .action-group-box { background-color: #fff; border: 2px solid #e1e8ed; border-radius: 15px; padding: 20px 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .message-value { font-size: 1.0rem; color: #222; line-height: 1.6; }
         .btn-custom { width: 100%; padding: 15px; font-weight: bold; border-radius: 12px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s; }
         .btn-custom:not([disabled]):not(.disabled) { filter: brightness(100%); box-shadow: 0 4px 6px rgba(0,0,0,0.2); opacity: 1; }
         .btn-custom[disabled], .btn-custom.disabled { opacity: 0.4; pointer-events: none; filter: grayscale(20%); box-shadow: none; }
@@ -131,24 +205,18 @@
         .btn-amulet:hover { background-color: #59359a; color: white; }
         .btn-history, .btn-history:disabled { background-color: #198754; color: white; border: none; margin-bottom: 12px; }
         .btn-history:hover { background-color: #157347; color: white; }
-        .history-section { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .table-responsive { font-size: 0.85rem; }
-        .date-input-container { background: #f8f9fa; padding: 10px; border-radius: 10px; margin-top: 15px; border: 1px solid #dee2e6; }
-        .amulet-list-btn { text-align: left; white-space: normal; margin-bottom: 10px; font-size: 0.95rem; padding: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 10px; color: #333; width: 100%; transition: 0.2s; }
-        .amulet-list-btn:hover { background-color: #f0f4f8; border-color: #6f42c1; }
-        .amulet-content-box { background: white; padding: 20px; border-radius: 15px; line-height: 1.8; font-size: 1rem; white-space: pre-wrap; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        
-        .amulet-title { color: #6f42c1; font-weight: bold; border-bottom: 2px solid #e1e8ed; padding-bottom: 10px; margin-bottom: 10px; }
+        .date-input-container { padding: 10px; border-radius: 10px; margin-top: 15px; }
+        .amulet-list-btn { text-align: left; white-space: normal; margin-bottom: 10px; font-size: 0.95rem; padding: 15px; border-radius: 10px; color: #333; width: 100%; transition: 0.2s; }
         
         .back-top-btn { margin-top: 20px; width: 100%; }
         .btn-update { background-color: #ffc107; color: #000; border: none; font-size: 0.8rem; padding: 10px; margin-top: 5px; }
-        .usage-text { background: #fff; padding: 20px; border-radius: 15px; line-height: 1.8; font-size: 1rem; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
 
 <div id="mainView" class="container py-3 view-section active" style="max-width: 600px;">
-    <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法アプリ</h4>
+    <h4 class="text-center mb-3" style="color: #333; font-weight:bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">SORA法アプリ</h4>
 
     <div class="timer-card">
         <div id="displayVersionTop" class="app-version"></div> 
@@ -177,7 +245,7 @@
     <div class="mb-5">
         <div class="row mb-3 g-2">
              <div class="col-12">
-                <button class="btn btn-outline-primary btn-custom mb-2" onclick="showUsageView()" style="padding: 10px; font-size: 1rem;">📖 使い方を見る</button>
+                <button class="btn btn-outline-primary btn-custom mb-2" onclick="showUsageView()" style="padding: 10px; font-size: 1rem; background-color: rgba(255,255,255,0.6);">📖 使い方を見る</button>
              </div>
              <div class="col-12">
                 <button id="btnStart" class="btn btn-primary btn-custom" onclick="logEvent('SORA法開始')">🚀 嘔吐を卒業してSORA法を始める</button>
@@ -195,7 +263,7 @@
             </div>
             <div class="date-input-container">
                 <label class="date-input-label" style="font-size:0.85rem; color:#555; font-weight:bold; margin-bottom:5px; display:block;">🕒 時間を指定して入力</label>
-                <input type="datetime-local" id="manualTimeInput" class="form-control">
+                <input type="datetime-local" id="manualTimeInput" class="form-control" style="background-color: rgba(255,255,255,0.8);">
             </div>
         </div>
 
@@ -211,26 +279,26 @@
             </div>
             
             <div class="col-12 mt-4 text-center">
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLScMy5P2lNA548npTtKhmXODihrMTP12l3hxvhEqfjmGIcv1Qw/viewform?usp=header" target="_blank" class="btn btn-outline-secondary btn-sm mb-2" style="border-radius: 20px; width: 100%;">
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLScMy5P2lNA548npTtKhmXODihrMTP12l3hxvhEqfjmGIcv1Qw/viewform?usp=header" target="_blank" class="btn btn-outline-secondary btn-sm mb-2" style="border-radius: 20px; width: 100%; background-color: rgba(255,255,255,0.6);">
                     📩 お問い合わせ
                 </a>
-                <a href="https://github.com/kokoronoyasuragibunko/-SORA-/releases" target="_blank" class="btn btn-outline-info btn-sm mb-3" style="border-radius: 20px; width: 100%; color: #0dcaf0; border-color: #0dcaf0;">
+                <a href="https://github.com/kokoronoyasuragibunko/-SORA-/releases" target="_blank" class="btn btn-outline-info btn-sm mb-3" style="border-radius: 20px; width: 100%; color: #0dcaf0; border-color: #0dcaf0; background-color: rgba(255,255,255,0.6);">
                     🔔 更新履歴 (GitHub)
                 </a>
                 <hr style="opacity: 0.1; margin: 10px 0;">
-                <p style="font-size:0.75rem; color:#aaa; margin-bottom:5px;">アプリの調子が悪いとき</p>
+                <p style="font-size:0.75rem; color:#666; margin-bottom:5px; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);">アプリの調子が悪いとき</p>
                 <button class="btn btn-update btn-custom" onclick="forceAppUpdate()" style="font-size: 0.8rem; padding: 8px;">
                     ⚡ アプリを強制更新・再読み込み
                 </button>
-                <p id="displayVersionBottom" class="mt-3" style="font-size:0.7rem; color:#ccc; margin-bottom: 2px;"></p>
-                <div style="font-size:0.7rem; color:#999;">&copy; 2026 こころの安らぎ文庫 Ryo Kohaku</div>
+                <p id="displayVersionBottom" class="mt-3" style="font-size:0.7rem; color:#666; margin-bottom: 2px; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"></p>
+                <div style="font-size:0.7rem; color:#666; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);">&copy; 2026 こころの安らぎ文庫 Ryo Kohaku</div>
             </div>
         </div>
     </div>
 </div>
 
 <div id="usageView" class="container py-3 view-section" style="max-width: 600px;">
-    <h4 class="text-center mb-4" style="color: #0d6efd; font-weight:bold;">📖 使い方</h4>
+    <h4 class="text-center mb-4" style="color: #0d6efd; font-weight:bold; background: rgba(255,255,255,0.5); padding:5px; border-radius:10px; backdrop-filter: blur(5px);">📖 使い方</h4>
     <div class="usage-text">
         <p><strong>①「嘔吐を卒業してSORA法を始める」を押す</strong><br>
         まずはこのボタンを押してスタートしましょう。</p>
@@ -243,11 +311,11 @@
 </div>
 
 <div id="historyView" class="container py-3 view-section" style="max-width: 600px;">
-    <h4 class="text-center mb-3" style="color: #198754; font-weight:bold;">📝 記録一覧</h4>
-    <button class="btn btn-outline-secondary w-100 mb-3" onclick="showMainView()">🔙 戻る</button>
+    <h4 class="text-center mb-3" style="color: #198754; font-weight:bold; background: rgba(255,255,255,0.5); padding:5px; border-radius:10px; backdrop-filter: blur(5px);">📝 記録一覧</h4>
+    <button class="btn btn-outline-secondary w-100 mb-3" onclick="showMainView()" style="background-color:rgba(255,255,255,0.6);">🔙 戻る</button>
     <div class="history-section">
         <div class="table-responsive">
-            <table class="table table-striped align-middle">
+            <table class="table table-striped align-middle" style="--bs-table-bg: transparent; --bs-table-striped-bg: rgba(0,0,0,0.03);">
                 <thead>
                     <tr>
                         <th style="width:25%">日時</th>
@@ -264,12 +332,12 @@
 </div>
 
 <div id="amuletListView" class="container py-3 view-section" style="max-width: 600px;">
-    <h4 class="text-center mb-4" style="color: #6f42c1; font-weight:bold;">🛡️ リカバリーアミュレット一覧</h4>
+    <h4 class="text-center mb-4" style="color: #6f42c1; font-weight:bold; background: rgba(255,255,255,0.5); padding:5px; border-radius:10px; backdrop-filter: blur(5px);">🛡️ リカバリーアミュレット一覧</h4>
     
     <button class="btn btn-secondary w-100 mb-3" onclick="showMainView()">🏠 TOPへ戻る</button>
 
     <div id="amuletButtonsContainer">
-        <p class="text-center text-muted">データを読み込んでいます...</p>
+        <p class="text-center text-muted" style="background: rgba(255,255,255,0.5); padding:10px; border-radius:10px; backdrop-filter: blur(5px);">データを読み込んでいます...</p>
     </div>
     <button class="btn btn-secondary back-top-btn" onclick="showMainView()">🏠 TOPへ戻る</button>
 </div>
@@ -278,20 +346,20 @@
     <h4 id="amuletDetailTitle" class="amulet-title">タイトル</h4>
     
     <div class="d-flex gap-2 mb-3">
-        <button class="btn btn-outline-secondary flex-fill" onclick="showAmuletList()">🔙 一覧へ戻る</button>
+        <button class="btn btn-outline-secondary flex-fill" onclick="showAmuletList()" style="background-color:rgba(255,255,255,0.6);">🔙 一覧へ戻る</button>
         <button class="btn btn-secondary flex-fill" onclick="showMainView()">🏠 TOPへ戻る</button>
     </div>
 
     <div id="amuletDetailText" class="amulet-content-box">
         </div>
         
-    <button class="btn btn-outline-secondary back-top-btn" onclick="showAmuletList()">🔙 一覧へ戻る</button>
+    <button class="btn btn-outline-secondary back-top-btn" onclick="showAmuletList()" style="background-color:rgba(255,255,255,0.6);">🔙 一覧へ戻る</button>
     <button class="btn btn-secondary back-top-btn" onclick="showMainView()">🏠 TOPへ戻る</button>
 </div>
 
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
+    <div class="modal-content" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
       <div class="modal-header">
         <h5 class="modal-title">記録の編集・削除</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -323,7 +391,7 @@
 </div>
 
 <script>
-    const APP_VERSION = 'v0.91'; // SORAアプリ v0.91
+    const APP_VERSION = 'v0.95'; // SORAアプリ v0.95
 
     document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('displayVersionTop').textContent = APP_VERSION;
@@ -437,7 +505,7 @@
                  p2.textContent = AMULETS[0].content;
                  container.appendChild(p2);
             } else {
-                container.innerHTML = "<p class='text-center text-muted'>データがありません。</p>";
+                container.innerHTML = "<p class='text-center text-muted' style='background: rgba(255,255,255,0.5); padding:10px; border-radius:10px; backdrop-filter: blur(5px);'>データがありません。</p>";
             }
         }
     };
@@ -446,13 +514,11 @@
         const data = AMULETS[index];
         document.getElementById('amuletDetailTitle').textContent = data.title;
         
-        // --- 修正: 本文が「」で囲まれている場合に除去する処理 ---
         let content = data.content ? data.content.trim() : "";
         if (content.startsWith("「") && content.endsWith("」")) {
             content = content.substring(1, content.length - 1);
         }
         document.getElementById('amuletDetailText').textContent = content;
-        // -----------------------------------------------------
 
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('amuletContentView').classList.add('active');
