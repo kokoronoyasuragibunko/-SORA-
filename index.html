@@ -6,12 +6,11 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-C5192FRPE2');
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SORA法 アプリ</title>
+    <title>SORA法 アプリ v0.91</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -21,20 +20,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     
-    <script src="amulets.js"></script>
+    <script src="message.js"></script>
+    <script src="recovery_amulets.js"></script>
     
     <meta name="theme-color" content="#f0f4f8">
     <style>
-        /* 重要：最初は画面を非表示にしておく（パスワード用） */
-        body { 
-            background-color: #fcfcfc; 
-            font-family: "Helvetica Neue", Arial, sans-serif; 
-            user-select: none; 
-            padding-bottom: 50px;
-            display: none; 
-        }
-
-        /* 画面切り替え用のクラス */
+        body { background-color: #fcfcfc; font-family: "Helvetica Neue", Arial, sans-serif; user-select: none; padding-bottom: 50px; display: none; }
         .view-section { display: none; }
         .view-section.active { display: block; }
         
@@ -49,28 +40,58 @@
             position: relative;
         }
 
-        /* バージョン表示 */
-        .app-version {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 0.7rem;
-            color: #ccc;
-        }
-
+        .app-version { position: absolute; top: 10px; right: 15px; font-size: 0.7rem; color: #ccc; }
+        
+        /* メインタイマー */
         .timer-display { 
-            font-size: clamp(1.5rem, 6vw, 2.5rem); 
+            font-size: clamp(1.8rem, 7vw, 3rem);
             font-weight: 900; 
             color: #0d6efd; 
             font-variant-numeric: tabular-nums; 
-            font-family: "Helvetica Neue", Arial, sans-serif;
-            margin: 5px 0;
-            line-height: 1.2;
-            text-shadow: 1px 1px 0px rgba(0,0,0,0.05);
-            white-space: nowrap;
+            margin: 5px 0; 
+            line-height: 1.2; 
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.05); 
+            white-space: nowrap; 
         }
 
-        .timer-label { font-size: 1.5rem; color: #555; font-weight: bold; }
+        /* ラベルのスタイルを共通化 */
+        .timer-label, .best-record-label { 
+            font-size: 1.2rem; 
+            color: #555; 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+        }
+
+        /* SORA画像エリア */
+        .sora-container {
+            margin: 20px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .sora-image {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            background-color: #fafafa; 
+            border-radius: 50%;
+            border: 4px solid #fff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .sora-countdown {
+            font-size: 0.9rem;
+            color: #888;
+            font-weight: bold;
+            background: #f8f9fa;
+            padding: 5px 12px;
+            border-radius: 15px;
+            display: inline-block;
+            font-variant-numeric: tabular-nums; 
+        }
 
         .record-box {
             border-radius: 10px;
@@ -82,153 +103,65 @@
             align-items: center;
         }
 
-        .best-record-box { background-color: #fffaf0; border: 2px solid #feebc8; width: 100%; }
-        .best-record-label { font-size: 0.9rem; color: #744210; font-weight: bold; margin-bottom: 5px; }
-        .best-record-value { font-size: 1.3rem; color: #d69e2e; font-weight: 800; line-height: 1.2; }
-
-        .message-box { 
-            background-color: #e7f1ff; 
-            border: 2px solid #b6d4fe; 
-            border-radius: 10px; 
-            padding: 15px; 
-            text-align: left; 
-            margin-top: 15px;
+        .best-record-box { 
+            background-color: #fffaf0; 
+            border: 2px solid #feebc8; 
+            width: 100%; 
+            margin-top: 10px;
         }
+        
+        .best-record-value { 
+            font-size: clamp(1.8rem, 7vw, 3rem);
+            color: #d69e2e;
+            font-weight: 900; 
+            line-height: 1.2; 
+            white-space: nowrap;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.05);
+        }
+
+        .message-box { background-color: #e7f1ff; border: 2px solid #b6d4fe; border-radius: 10px; padding: 15px; text-align: left; margin-top: 15px; }
         .message-label { font-size: 0.9rem; color: #084298; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; }
         .message-value { font-size: 1.0rem; color: #333; line-height: 1.6; }
-
-        .action-group-box {
-            background-color: #fff;
-            border: 2px solid #e1e8ed;
-            border-radius: 15px;
-            padding: 20px 15px;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-        }
-
-        .btn-custom { 
-            width: 100%; 
-            padding: 15px; 
-            font-weight: bold; 
-            border-radius: 12px; 
-            font-size: 1.1rem; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-            transition: all 0.2s;
-        }
-        
-        .btn-custom:not([disabled]):not(.disabled) {
-            filter: brightness(100%);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            opacity: 1;
-        }
-
-        .btn-custom[disabled], .btn-custom.disabled {
-            opacity: 0.4; 
-            pointer-events: none; 
-            filter: grayscale(20%); 
-            box-shadow: none;
-        }
-
-        /* アミュレットボタンの設定 */
-        .btn-amulet, .btn-amulet:disabled, .btn-amulet.disabled { 
-            background-color: #6f42c1; 
-            color: white; 
-            border: none; 
-            margin-bottom: 12px;
-        }
+        .action-group-box { background-color: #fff; border: 2px solid #e1e8ed; border-radius: 15px; padding: 20px 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .btn-custom { width: 100%; padding: 15px; font-weight: bold; border-radius: 12px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s; }
+        .btn-custom:not([disabled]):not(.disabled) { filter: brightness(100%); box-shadow: 0 4px 6px rgba(0,0,0,0.2); opacity: 1; }
+        .btn-custom[disabled], .btn-custom.disabled { opacity: 0.4; pointer-events: none; filter: grayscale(20%); box-shadow: none; }
+        .btn-amulet, .btn-amulet:disabled, .btn-amulet.disabled { background-color: #6f42c1; color: white; border: none; margin-bottom: 12px; }
         .btn-amulet:hover { background-color: #59359a; color: white; }
-
-        /* 記録ボタンの設定 */
-        .btn-history, .btn-history:disabled {
-            background-color: #198754; /* 緑系 */
-            color: white;
-            border: none;
-            margin-bottom: 12px;
-        }
+        .btn-history, .btn-history:disabled { background-color: #198754; color: white; border: none; margin-bottom: 12px; }
         .btn-history:hover { background-color: #157347; color: white; }
-
         .history-section { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .table-responsive { font-size: 0.85rem; }
+        .date-input-container { background: #f8f9fa; padding: 10px; border-radius: 10px; margin-top: 15px; border: 1px solid #dee2e6; }
+        .amulet-list-btn { text-align: left; white-space: normal; margin-bottom: 10px; font-size: 0.95rem; padding: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 10px; color: #333; width: 100%; transition: 0.2s; }
+        .amulet-list-btn:hover { background-color: #f0f4f8; border-color: #6f42c1; }
+        .amulet-content-box { background: white; padding: 20px; border-radius: 15px; line-height: 1.8; font-size: 1rem; white-space: pre-wrap; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         
-        .date-input-container { 
-            background: #f8f9fa; 
-            padding: 10px; 
-            border-radius: 10px; 
-            margin-top: 15px; 
-            border: 1px solid #dee2e6;
-        }
-
-        .amulet-list-btn {
-            text-align: left;
-            white-space: normal;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
-            padding: 15px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            color: #333;
-            width: 100%;
-            transition: 0.2s;
-        }
-        .amulet-list-btn:hover {
-            background-color: #f0f4f8;
-            border-color: #6f42c1;
-        }
-        .amulet-content-box {
-            background: white;
-            padding: 20px;
-            border-radius: 15px;
-            line-height: 1.8;
-            font-size: 1rem;
-            white-space: pre-wrap;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .amulet-title {
-            color: #6f42c1;
-            font-weight: bold;
-            border-bottom: 2px solid #e1e8ed;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .back-top-btn {
-            margin-top: 20px;
-            width: 100%;
-        }
+        .amulet-title { color: #6f42c1; font-weight: bold; border-bottom: 2px solid #e1e8ed; padding-bottom: 10px; margin-bottom: 10px; }
         
-        .btn-update {
-            background-color: #ffc107;
-            color: #000;
-            border: none;
-            font-size: 0.8rem;
-            padding: 10px;
-            margin-top: 5px;
-        }
-
-        .usage-text {
-            background: #fff;
-            padding: 20px;
-            border-radius: 15px;
-            line-height: 1.8;
-            font-size: 1rem;
-            color: #333;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
+        .back-top-btn { margin-top: 20px; width: 100%; }
+        .btn-update { background-color: #ffc107; color: #000; border: none; font-size: 0.8rem; padding: 10px; margin-top: 5px; }
+        .usage-text { background: #fff; padding: 20px; border-radius: 15px; line-height: 1.8; font-size: 1rem; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
 
 <div id="mainView" class="container py-3 view-section active" style="max-width: 600px;">
-    <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法 記録ノート</h4>
+    <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法アプリ</h4>
 
     <div class="timer-card">
         <div id="displayVersionTop" class="app-version"></div> 
         
-        <p class="timer-label mb-0">嘔吐していない連続時間</p>
+        <div class="timer-label">嘔吐していない連続時間</div>
         <div id="timerDisplay" class="timer-display">0日 0時間 0分 0秒</div>
-        
-        <div class="mt-4">
+
+        <div class="sora-container">
+            <img id="soraImage" class="sora-image" src="1.png" alt="SORA" onerror="this.style.display='none'">
+            <div id="soraCountdown" class="sora-countdown"></div>
+        </div>
+
+        <div class="mt-2">
             <div class="record-box best-record-box">
                 <div class="best-record-label">🏆 嘔吐せずにいられた最長時間</div>
                 <div id="bestDurationDisplay" class="best-record-value">（未計測）</div>
@@ -260,7 +193,6 @@
                     <button id="btnVomit" class="btn btn-danger btn-custom mb-0" onclick="logEvent('嘔吐')" disabled>⚠️ 嘔吐</button>
                 </div>
             </div>
-            
             <div class="date-input-container">
                 <label class="date-input-label" style="font-size:0.85rem; color:#555; font-weight:bold; margin-bottom:5px; display:block;">🕒 時間を指定して入力</label>
                 <input type="datetime-local" id="manualTimeInput" class="form-control">
@@ -282,19 +214,16 @@
                 <a href="https://docs.google.com/forms/d/e/1FAIpQLScMy5P2lNA548npTtKhmXODihrMTP12l3hxvhEqfjmGIcv1Qw/viewform?usp=header" target="_blank" class="btn btn-outline-secondary btn-sm mb-2" style="border-radius: 20px; width: 100%;">
                     📩 お問い合わせ
                 </a>
-
                 <a href="https://github.com/kokoronoyasuragibunko/-SORA-/releases" target="_blank" class="btn btn-outline-info btn-sm mb-3" style="border-radius: 20px; width: 100%; color: #0dcaf0; border-color: #0dcaf0;">
                     🔔 更新履歴 (GitHub)
                 </a>
-
                 <hr style="opacity: 0.1; margin: 10px 0;">
-
                 <p style="font-size:0.75rem; color:#aaa; margin-bottom:5px;">アプリの調子が悪いとき</p>
                 <button class="btn btn-update btn-custom" onclick="forceAppUpdate()" style="font-size: 0.8rem; padding: 8px;">
                     ⚡ アプリを強制更新・再読み込み
                 </button>
-                
-                <p id="displayVersionBottom" class="mt-3" style="font-size:0.7rem; color:#ccc;"></p>
+                <p id="displayVersionBottom" class="mt-3" style="font-size:0.7rem; color:#ccc; margin-bottom: 2px;"></p>
+                <div style="font-size:0.7rem; color:#999;">&copy; 2026 こころの安らぎ文庫 Ryo Kohaku</div>
             </div>
         </div>
     </div>
@@ -305,22 +234,17 @@
     <div class="usage-text">
         <p><strong>①「嘔吐を卒業してSORA法を始める」を押す</strong><br>
         まずはこのボタンを押してスタートしましょう。</p>
-        
-        <p><strong>②「食事」または「嘔吐」を記録する</strong><br>
-        食事をしたり、嘔吐してしまった時はボタンを押して記録します。<br>
-        ※時間を遡って記録したい場合は、下の時間入力欄に入れてからボタンを押してください。</p>
-        
-        <p><strong>③ 21日間を目指す</strong><br>
-        「嘔吐せずにいられた最長時間」が21日間を超えたらゴールです！</p>
+        <p><strong>②食事か嘔吐をしたらボタンを押してSORAを育てる</strong><br>
+        時刻が記録され「嘔吐せずにいられた最長時間」が更新されます。その時間が長くなると、SORA（嘔吐しないでいられるパワー）はどんどん成長し、姿を変えます。（※食事、嘔吐時刻を指定する場合は時刻を入力してからボタンを押してください。）</p>
+        <p><strong>③ 「嘔吐せずにいられた最長時間」が21日間になるまでSORAを育てる</strong><br>
+        「嘔吐せずにいられた最長時間」が21日間になるとSORAが成長しきって過食嘔吐の克服となります。</p>
     </div>
     <button class="btn btn-secondary back-top-btn" onclick="showMainView()">🏠 TOPへ戻る</button>
 </div>
 
 <div id="historyView" class="container py-3 view-section" style="max-width: 600px;">
     <h4 class="text-center mb-3" style="color: #198754; font-weight:bold;">📝 記録一覧</h4>
-    
     <button class="btn btn-outline-secondary w-100 mb-3" onclick="showMainView()">🔙 戻る</button>
-
     <div class="history-section">
         <div class="table-responsive">
             <table class="table table-striped align-middle">
@@ -336,21 +260,31 @@
             </table>
         </div>
     </div>
-
     <button class="btn btn-secondary back-top-btn" onclick="showMainView()">🏠 TOPへ戻る</button>
 </div>
 
 <div id="amuletListView" class="container py-3 view-section" style="max-width: 600px;">
     <h4 class="text-center mb-4" style="color: #6f42c1; font-weight:bold;">🛡️ リカバリーアミュレット一覧</h4>
+    
+    <button class="btn btn-secondary w-100 mb-3" onclick="showMainView()">🏠 TOPへ戻る</button>
+
     <div id="amuletButtonsContainer">
-        </div>
+        <p class="text-center text-muted">データを読み込んでいます...</p>
+    </div>
     <button class="btn btn-secondary back-top-btn" onclick="showMainView()">🏠 TOPへ戻る</button>
 </div>
 
 <div id="amuletContentView" class="container py-3 view-section" style="max-width: 600px;">
     <h4 id="amuletDetailTitle" class="amulet-title">タイトル</h4>
+    
+    <div class="d-flex gap-2 mb-3">
+        <button class="btn btn-outline-secondary flex-fill" onclick="showAmuletList()">🔙 一覧へ戻る</button>
+        <button class="btn btn-secondary flex-fill" onclick="showMainView()">🏠 TOPへ戻る</button>
+    </div>
+
     <div id="amuletDetailText" class="amulet-content-box">
         </div>
+        
     <button class="btn btn-outline-secondary back-top-btn" onclick="showAmuletList()">🔙 一覧へ戻る</button>
     <button class="btn btn-secondary back-top-btn" onclick="showMainView()">🏠 TOPへ戻る</button>
 </div>
@@ -389,22 +323,17 @@
 </div>
 
 <script>
-    // ▼▼▼ バージョン設定 ▼▼▼
-    const APP_VERSION = 'v1.15';
-    // ▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲▲
+    const APP_VERSION = 'v0.91'; // SORAアプリ v0.91
 
-    // 画面にバージョンを表示する処理
     document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('displayVersionTop').textContent = APP_VERSION;
         document.getElementById('displayVersionBottom').textContent = 'SORA Method App ' + APP_VERSION;
     });
 
-    // --- セキュリティ対策済みパスワード制限 (sesame) ---
     (function(){
         var sesame = "56";        
         var redirectUrl = "https://google.com";
         var lockKey = "sora_app_session_key";
-        
         function checkAuth() {
             if (localStorage.getItem(lockKey) === sesame) {
                 document.body.style.display = 'block';
@@ -415,7 +344,6 @@
                 document.body.style.display = 'block';
                 return;
             }
-
             setTimeout(function() {
                 var input = prompt("パスワードを入力してください:");
                 if (input === sesame) {
@@ -423,11 +351,7 @@
                     document.body.style.display = 'block';
                 } else {
                     alert("パスワードが違います。");
-                    if (window.history.length > 1) {
-                        window.history.back();
-                    } else {
-                        window.location.href = redirectUrl;
-                    }
+                    if (window.history.length > 1) { window.history.back(); } else { window.location.href = redirectUrl; }
                     document.body.innerHTML = "";
                 }
             }, 100);
@@ -435,38 +359,26 @@
         window.addEventListener('DOMContentLoaded', checkAuth);
     })();
     
-    // --- Service Worker 登録 ---
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js?v=' + APP_VERSION).then(function(registration) {
             registration.update();
-            
             registration.onupdatefound = function() {
                 const installingWorker = registration.installing;
                 installingWorker.onstatechange = function() {
-                    if (installingWorker.state === 'installed') {
-                        if (navigator.serviceWorker.controller) {
-                            console.log('新しい更新があります。');
-                        }
+                    if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        console.log('新しい更新があります。');
                     }
                 };
             };
         }).catch(console.error);
-
-        navigator.serviceWorker.addEventListener('controllerchange', () => {
-            window.location.reload();
-        });
+        navigator.serviceWorker.addEventListener('controllerchange', () => { window.location.reload(); });
     }
 
-    // 強制更新機能
     async function forceAppUpdate() {
-        const confirmUpdate = confirm("アプリを強制的に更新しますか？\n（記録データは消えません）");
-        if (!confirmUpdate) return;
-
+        if (!confirm("アプリを強制的に更新しますか？\n（記録データは消えません）")) return;
         if ('serviceWorker' in navigator) {
             const registrations = await navigator.serviceWorker.getRegistrations();
-            for (const registration of registrations) {
-                await registration.unregister();
-            }
+            for (const registration of registrations) { await registration.unregister(); }
         }
         window.location.reload(true);
     }
@@ -475,17 +387,22 @@
     let editModalInstance;
     let timerInterval;
 
+    let historicalMaxMs = 0;
+    let currentSessionStartTime = null;
+
     window.onload = function() {
         editModalInstance = new bootstrap.Modal(document.getElementById('editModal'));
         document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
         
-        createAmuletButtons();
         updateButtonState();
         runFunctionF(); 
         calculateBestDuration(); 
         renderTable();
-        
         updateAllDisplays();
+
+        if (typeof fetchAndParseAmulets === 'function') {
+            fetchAndParseAmulets();
+        }
 
         const latestEvent = soraData[0];
         if (latestEvent && (latestEvent.event === '食事' || latestEvent.event === 'SORA法開始')) {
@@ -495,15 +412,52 @@
         }
     };
 
-    // 画面アクティブ時の更新
-    document.addEventListener("visibilitychange", function() {
-        if (document.visibilityState === 'visible') {
-            updateAllDisplays();
+    document.addEventListener("visibilitychange", function() { if (document.visibilityState === 'visible') updateAllDisplays(); });
+    window.addEventListener("focus", function() { updateAllDisplays(); });
+
+    window.createAmuletButtons = function() {
+        const container = document.getElementById('amuletButtonsContainer');
+        container.innerHTML = "";
+        if (typeof AMULETS !== 'undefined' && AMULETS.length > 0) {
+            AMULETS.forEach((amulet, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'amulet-list-btn';
+                btn.textContent = amulet.title;
+                btn.onclick = () => showAmuletContent(index);
+                container.appendChild(btn);
+            });
+        } else {
+            if (typeof AMULETS !== 'undefined' && AMULETS.length > 0 && AMULETS[0].title.includes("エラー")) {
+                 const p = document.createElement('p');
+                 p.className = 'text-center text-danger';
+                 p.textContent = AMULETS[0].title;
+                 container.appendChild(p);
+                 const p2 = document.createElement('p');
+                 p2.className = 'small text-muted';
+                 p2.textContent = AMULETS[0].content;
+                 container.appendChild(p2);
+            } else {
+                container.innerHTML = "<p class='text-center text-muted'>データがありません。</p>";
+            }
         }
-    });
-    window.addEventListener("focus", function() {
-        updateAllDisplays();
-    });
+    };
+    
+    function showAmuletContent(index) {
+        const data = AMULETS[index];
+        document.getElementById('amuletDetailTitle').textContent = data.title;
+        
+        // --- 修正: 本文が「」で囲まれている場合に除去する処理 ---
+        let content = data.content ? data.content.trim() : "";
+        if (content.startsWith("「") && content.endsWith("」")) {
+            content = content.substring(1, content.length - 1);
+        }
+        document.getElementById('amuletDetailText').textContent = content;
+        // -----------------------------------------------------
+
+        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+        document.getElementById('amuletContentView').classList.add('active');
+        window.scrollTo(0, 0);
+    }
 
     function updateAllDisplays() {
         if (soraData.length > 0) {
@@ -519,46 +473,18 @@
     function logEvent(eventName) {
         const manualInput = document.getElementById('manualTimeInput').value;
         const now = manualInput ? new Date(manualInput) : new Date();
-
-        if (now.getTime() > new Date().getTime()) {
-            alert("未来の日時は入力できません。");
-            return;
-        }
-
+        if (now.getTime() > new Date().getTime()) { alert("未来の日時は入力できません。"); return; }
         if (eventName !== 'SORA法開始') {
             const startEvent = soraData.find(d => d.event === 'SORA法開始');
-            if (startEvent && now.getTime() < startEvent.timestamp) {
-                alert("SORA法開始以前の時刻は入力できません");
-                return; 
-            }
+            if (startEvent && now.getTime() < startEvent.timestamp) { alert("SORA法開始以前の時刻は入力できません"); return; }
         }
-
-        const newEntry = {
-            id: generateId(),
-            timestamp: now.getTime(),
-            event: eventName,
-            result: "",
-            durationStr: "-",
-            durationMs: 0
-        };
-
+        const newEntry = { id: generateId(), timestamp: now.getTime(), event: eventName, result: "", durationStr: "-", durationMs: 0 };
         soraData.unshift(newEntry);
         soraData.sort((a, b) => b.timestamp - a.timestamp);
-
-        if (eventName === 'SORA法開始') {
-            startTimer();
-        } else if (eventName === '食事') {
-            const isTimerStopped = !timerInterval;
-            if (isTimerStopped) {
-                startTimer();
-            }
-        } else if (eventName === '嘔吐') {
-            stopTimer(); 
-            startTimer();
-        }
-
+        if (eventName === 'SORA法開始') startTimer();
+        else if (eventName === '食事') { if (!timerInterval) startTimer(); }
+        else if (eventName === '嘔吐') { stopTimer(); startTimer(); }
         updateAllDisplays();
-        
         saveData();
         document.getElementById('manualTimeInput').value = '';
         updateButtonState();
@@ -566,36 +492,21 @@
 
     function checkFeedback(eventType, ms) {
         const displayEl = document.getElementById('messageDisplay');
-
-        if (eventType === 'SORA法開始') {
-            displayEl.textContent = "SORA法を開始しました。自分のペースで進めていきましょう！";
-            return;
-        }
-
+        if (eventType === 'SORA法開始') { displayEl.textContent = "SORA法を開始しました。自分のペースで進めていきましょう！"; return; }
         const timeStr = getFlexibleFormat(ms);
-        let msg = "";
-
+        let msg = "データが読み込めませんでした。";
         if (typeof FEEDBACK_DATA !== 'undefined' && FEEDBACK_DATA[eventType]) {
             const rules = FEEDBACK_DATA[eventType];
             for (let i = 0; i < rules.length; i++) {
                 const rule = rules[i];
                 if (rule.limit === null || ms < rule.limit) {
-                    if (typeof rule.message === 'function') {
-                        msg = rule.message(ms);
-                    } else {
-                        msg = rule.message;
-                    }
+                    msg = (typeof rule.message === 'function') ? rule.message(ms) : rule.message;
                     break;
                 }
             }
-        } else {
-            msg = "データが読み込めませんでした。";
         }
-
-        // 警告機能
         let warningHtml = "";
         if (eventType === '食事') {
-            const currentTimestamp = soraData[0].timestamp;
             let prevMealTime = null;
             for (let i = 1; i < soraData.length; i++) {
                 if (soraData[i].event === '食事' || soraData[i].event === 'SORA法開始') {
@@ -603,30 +514,18 @@
                     break;
                 }
             }
-
             if (prevMealTime !== null) {
-                const diff = currentTimestamp - prevMealTime;
-                if (diff >= 12 * 60 * 60 * 1000) {
-                    warningHtml = '<br><br><strong style="color:red;">⚠️前回食事から12時間以上経っています⚠️</strong>';
-                }
+                const diff = soraData[0].timestamp - prevMealTime;
+                if (diff >= 12 * 60 * 60 * 1000) warningHtml = '<br><br><strong style="color:red;">⚠️前回食事から12時間以上経っています⚠️</strong>';
             }
         }
-
-        if (eventType === '食事') {
-            const fullText = `いま${timeStr}嘔吐しないで過ごせています。\n${msg}`;
-            displayEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>') + warningHtml;
-        } else if (eventType === '嘔吐') {
-            const fullText = `${timeStr}嘔吐しないで過ごせたね。\n${msg}`;
-            displayEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>');
-        }
+        const fullText = (eventType === '食事') ? `いま${timeStr}嘔吐しないで過ごせています。\n${msg}` : `${timeStr}嘔吐しないで過ごせたね。\n${msg}`;
+        displayEl.innerHTML = escapeHtml(fullText).replace(/\n/g, '<br>') + warningHtml;
     }
 
     function escapeHtml(str) {
         if (!str) return "";
-        return str.replace(/[&<>"']/g, function(match) {
-            const escape = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
-            return escape[match];
-        });
+        return str.replace(/[&<>"']/g, match => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[match]);
     }
 
     function getFlexibleFormat(ms) {
@@ -635,55 +534,34 @@
         const hour = Math.floor((ms % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const min = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
         const sec = Math.floor((ms % (1000 * 60)) / 1000);
-
         let parts = [];
         if (day > 0) parts.push(`${day}日`);
         if (hour > 0 || day > 0) parts.push(`${hour}時間`);
         if (min > 0 || hour > 0 || day > 0) parts.push(`${min}分`);
         parts.push(`${sec}秒`); 
-
         return parts.join("");
     }
 
     function generateId() {
         if(soraData.length === 0) return 1;
-        const maxId = Math.max(...soraData.map(d => d.id));
-        return maxId + 1;
+        return Math.max(...soraData.map(d => d.id)) + 1;
     }
 
     function runFunctionF() {
         const orderedData = [...soraData].sort((a, b) => a.timestamp - b.timestamp);
-        
         for (let i = 0; i < orderedData.length; i++) {
             const currentRow = orderedData[i];
-            
             if (currentRow.event === 'SORA法開始') {
-                currentRow.durationStr = "-";
-                currentRow.durationMs = 0;
-                continue;
+                currentRow.durationStr = "-"; currentRow.durationMs = 0; continue;
             }
-
-            let foundVomit = false;
-            let targetTime = 0;
-
+            let foundVomit = false, targetTime = 0;
             for (let j = i - 1; j >= 0; j--) {
-                const pastRow = orderedData[j];
-                if (pastRow.event === '嘔吐') {
-                    targetTime = pastRow.timestamp;
-                    foundVomit = true;
-                    break;
-                }
+                if (orderedData[j].event === '嘔吐') { targetTime = orderedData[j].timestamp; foundVomit = true; break; }
             }
-
             if (!foundVomit) {
                  const startRow = orderedData.find(d => d.event === 'SORA法開始');
-                 if (startRow) {
-                     targetTime = startRow.timestamp;
-                 } else {
-                     targetTime = currentRow.timestamp; 
-                 }
+                 targetTime = startRow ? startRow.timestamp : currentRow.timestamp;
             }
-
             const diffMs = currentRow.timestamp - targetTime;
             currentRow.durationMs = diffMs > 0 ? diffMs : 0;
             currentRow.durationStr = formatDuration(currentRow.durationMs);
@@ -694,100 +572,165 @@
         const display = document.getElementById('bestDurationDisplay');
         const startEvent = soraData.find(d => d.event === 'SORA法開始');
         
-        if (!startEvent) {
-            display.textContent = "（未計測）";
-            return;
-        }
+        let tempMax = 0;
+        historicalMaxMs = 0;
+        currentSessionStartTime = null;
 
-        let maxMs = 0;
-        soraData.forEach(d => {
-            if (d.durationMs > maxMs) {
-                maxMs = d.durationMs;
+        if (startEvent) {
+            const ordered = [...soraData].sort((a, b) => a.timestamp - b.timestamp);
+            const vomits = ordered.filter(d => d.event === '嘔吐');
+            const meals = ordered.filter(d => d.event === '食事');
+            
+            vomits.forEach((v, index) => {
+                let prevTime = startEvent.timestamp;
+                if (index > 0) {
+                    prevTime = vomits[index - 1].timestamp;
+                }
+                const diff = v.timestamp - prevTime;
+                if (diff > tempMax) tempMax = diff;
+            });
+
+            if (vomits.length === 0) {
+                currentSessionStartTime = startEvent.timestamp;
+                if (meals.length > 0) {
+                    const latestMeal = meals[meals.length - 1];
+                    const diff = latestMeal.timestamp - startEvent.timestamp;
+                    if (diff > tempMax) tempMax = diff;
+                }
+            } else {
+                const latestVomit = vomits[vomits.length - 1];
+                currentSessionStartTime = latestVomit.timestamp;
+                if (meals.length > 0) {
+                    const latestMeal = meals[meals.length - 1];
+                    if (latestMeal.timestamp > latestVomit.timestamp) {
+                        const diff = latestMeal.timestamp - latestVomit.timestamp;
+                        if (diff > tempMax) tempMax = diff;
+                    }
+                }
             }
-        });
-
-        display.textContent = maxMs > 0 ? formatDuration(maxMs) : "（未計測）";
-    }
-
-    function startTimer() {
-        if (timerInterval) return;
-        timerInterval = setInterval(updateTimer, 1000, true);
-        updateTimer(true);
-    }
-
-    function stopTimer() {
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
         }
-        updateTimer(false);
+        
+        historicalMaxMs = tempMax; 
+        display.textContent = tempMax > 0 ? formatDuration(tempMax) : "（未計測）";
     }
 
-    function updateTimer(isRunning) {
-        const now = new Date();
-        const display = document.getElementById('timerDisplay');
+    function updateSoraGrowth(levelDeterminationTime, currentTimerMs) {
+        const soraImg = document.getElementById('soraImage');
+        const soraCount = document.getElementById('soraCountdown');
         
-        let targetTime = 0;
-        let found = false;
+        const HOUR = 3600000;
+        const DAY = 86400000;
+        
+        let currentImg = "1.png";
+        let nextTargetMs = 3 * HOUR;
 
-        const latestVomit = soraData.find(d => d.event === '嘔吐');
-        
-        if (latestVomit) {
-            targetTime = latestVomit.timestamp;
-            found = true;
+        const t = levelDeterminationTime;
+        if (t < 3 * HOUR) {
+            currentImg = "1.png"; nextTargetMs = 3 * HOUR;
+        } else if (t < 6 * HOUR) {
+            currentImg = "2.png"; nextTargetMs = 6 * HOUR;
+        } else if (t < 12 * HOUR) {
+            currentImg = "3.png"; nextTargetMs = 12 * HOUR;
+        } else if (t < 24 * HOUR) {
+            currentImg = "4.png"; nextTargetMs = 1 * DAY;
+        } else if (t < 2 * DAY) {
+            currentImg = "5.png"; nextTargetMs = 2 * DAY;
+        } else if (t < 4 * DAY) {
+            currentImg = "6.png"; nextTargetMs = 4 * DAY;
+        } else if (t < 6 * DAY) {
+            currentImg = "7.png"; nextTargetMs = 6 * DAY;
+        } else if (t < 8 * DAY) {
+            currentImg = "8.png"; nextTargetMs = 8 * DAY;
+        } else if (t < 10 * DAY) {
+            currentImg = "9.png"; nextTargetMs = 10 * DAY;
+        } else if (t < 12 * DAY) {
+            currentImg = "10.png"; nextTargetMs = 12 * DAY;
+        } else if (t < 14 * DAY) {
+            currentImg = "11.png"; nextTargetMs = 14 * DAY;
+        } else if (t < 16 * DAY) {
+            currentImg = "12.png"; nextTargetMs = 16 * DAY;
+        } else if (t < 18 * DAY) {
+            currentImg = "13.png"; nextTargetMs = 18 * DAY;
+        } else if (t < 22 * DAY) {
+            currentImg = "14.png"; nextTargetMs = 22 * DAY;
         } else {
-            const startEvent = soraData.find(d => d.event === 'SORA法開始');
-            if (startEvent) {
-                targetTime = startEvent.timestamp;
-                found = true;
-            }
+            currentImg = "15.png"; nextTargetMs = null; 
         }
 
-        if (found) {
-            let diff = now.getTime() - targetTime;
-            if (diff < 0) diff = 0;
-            display.textContent = formatDuration(diff);
+        soraImg.src = currentImg;
+        soraImg.style.display = 'block'; 
+
+        if (nextTargetMs !== null) {
+            const diff = nextTargetMs - currentTimerMs;
+            
+            if (diff > 0) {
+                const d = Math.floor(diff / DAY);
+                const h = Math.floor((diff % DAY) / HOUR);
+                const m = Math.floor((diff % HOUR) / 60000);
+                const s = Math.floor((diff % 60000) / 1000); 
+                
+                let text = "SORAの次の成長まであと ";
+                if (d > 0) text += `${d}日 `;
+                if (h > 0) text += `${h}時間 `;
+                text += `${m}分 ${s}秒`;
+                
+                soraCount.textContent = text;
+                soraCount.style.display = 'inline-block';
+            } else {
+                soraCount.textContent = "成長中...";
+            }
+        } else {
+            soraCount.textContent = "SORAの次の成長まで：完全に成長しました";
+            soraCount.style.display = 'inline-block';
+        }
+    }
+
+    function startTimer() { if (timerInterval) return; timerInterval = setInterval(updateTimer, 1000, true); updateTimer(true); }
+    function stopTimer() { if (timerInterval) { clearInterval(timerInterval); timerInterval = null; } updateTimer(false); }
+    
+    function updateTimer(isRunning) {
+        const display = document.getElementById('timerDisplay');
+        const bestDisplay = document.getElementById('bestDurationDisplay');
+        
+        let currentTimerMs = 0;
+        if (currentSessionStartTime !== null) {
+            currentTimerMs = new Date().getTime() - currentSessionStartTime;
+            if (currentTimerMs < 0) currentTimerMs = 0;
+            display.textContent = formatDuration(currentTimerMs);
         } else {
             display.textContent = "0日 0時間 0分 0秒";
         }
+
+        let levelDeterminationTime = Math.max(historicalMaxMs, currentTimerMs);
+
+        if (levelDeterminationTime > 0) {
+            bestDisplay.textContent = formatDuration(levelDeterminationTime);
+        }
+
+        updateSoraGrowth(levelDeterminationTime, currentTimerMs);
     }
 
     function updateButtonState() {
         const hasStart = soraData.some(d => d.event === 'SORA法開始');
-        
         document.getElementById('btnStart').disabled = hasStart; 
         document.getElementById('btnMeal').disabled = !hasStart; 
         document.getElementById('btnVomit').disabled = !hasStart;
-        
         const amuletButton = document.getElementById('btnAmulet');
-        if (hasStart) {
-            amuletButton.classList.remove('disabled');
-        } else {
-            amuletButton.classList.add('disabled');
-        }
+        const historyButton = document.getElementById('btnHistory');
+        if (hasStart) { amuletButton.classList.remove('disabled'); historyButton.disabled = false; }
+        else { amuletButton.classList.add('disabled'); historyButton.disabled = true; }
     }
 
     function renderTable() {
         const tbody = document.getElementById('logTableBody');
         tbody.innerHTML = "";
-
         soraData.forEach((row) => {
             const tr = document.createElement('tr');
             const isStartRow = (row.event === 'SORA法開始');
-            
             let eventColor = "";
-            if (row.event === "食事") {
-                eventColor = "text-success fw-bold";
-            } else if (row.event === "嘔吐") {
-                eventColor = "text-danger fw-bold";
-            }
-
-            tr.innerHTML = `
-                <td>${formatDate(new Date(row.timestamp), true)}</td>
-                <td class="${eventColor}">${row.event}</td>
-                <td style="font-weight:bold;">${row.durationStr || "-"}</td>
-                <td><button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${row.id})" ${isStartRow ? 'disabled' : ''}>編集</button></td>
-            `;
+            if (row.event === "食事") eventColor = "text-success fw-bold";
+            else if (row.event === "嘔吐") eventColor = "text-danger fw-bold";
+            tr.innerHTML = `<td>${formatDate(new Date(row.timestamp), true)}</td><td class="${eventColor}">${row.event}</td><td style="font-weight:bold;">${row.durationStr || "-"}</td><td><button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${row.id})" ${isStartRow ? 'disabled' : ''}>編集</button></td>`;
             tbody.appendChild(tr);
         });
     }
@@ -813,42 +756,31 @@
     }
     
     function saveData() {
-        try {
-            localStorage.setItem('soraData', JSON.stringify(soraData));
-        } catch (e) {
-            console.error("Save failed:", e);
-            if (e.name === 'QuotaExceededError' || e.name === 'NS_ERROR_DOM_QUOTA_REACHED') {
-                alert("⚠️ 保存容量がいっぱいです\nこれ以上データを保存できません。");
-            }
-        }
+        try { localStorage.setItem('soraData', JSON.stringify(soraData)); }
+        catch (e) { console.error("Save failed:", e); alert("⚠️ 保存容量がいっぱいです。"); }
     }
     
     window.confirmReset = function() {
-        const confirmResult = confirm("SORAの記録データをすべて消去して、最初からやり直しますか？\n（この操作は元に戻せません）");
-        if (confirmResult) {
-            resetSora();
-        }
+        if (confirm("SORAの記録データをすべて消去して、最初からやり直しますか？\n（この操作は元に戻せません）")) resetSora();
     }
 
     function resetSora() {
-        stopTimer();
-        soraData = [];
-        localStorage.removeItem('soraData');
+        stopTimer(); soraData = []; localStorage.removeItem('soraData');
         document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
         document.getElementById('bestDurationDisplay').textContent = "（未計測）";
         document.getElementById('messageDisplay').textContent = "（ここにメッセージが表示されます）";
-        updateButtonState();
-        renderTable();
+        updateButtonState(); renderTable(); 
+        
+        historicalMaxMs = 0;
+        currentSessionStartTime = null;
+        updateSoraGrowth(0, 0);
+        
         location.reload(); 
     }
     
     function openEdit(id) {
         const target = soraData.find(d => d.id === id);
-        if(!target) return;
-        if (target.event === 'SORA法開始') {
-            alert("「SORA法開始」イベントは編集できません。");
-            return;
-        }
+        if(!target || target.event === 'SORA法開始') { alert("編集できません。"); return; }
         document.getElementById('editId').value = target.id;
         document.getElementById('editEvent').value = target.event;
         const date = new Date(target.timestamp);
@@ -860,135 +792,57 @@
     function saveEdit() {
         const id = parseInt(document.getElementById('editId').value);
         const timeInput = document.getElementById('editTime').value;
-        const eventInput = document.getElementById('editEvent').value;
         if(!timeInput) { alert("日時を入力してください"); return; }
-        
         const newTimestamp = new Date(timeInput).getTime();
         const nowMs = new Date().getTime();
-        if (newTimestamp > nowMs) {
-            alert("未来の日時は入力できません。");
-            return;
-        }
-        
+        if (newTimestamp > nowMs) { alert("未来の日時は入力できません。"); return; }
         const startEvent = soraData.find(d => d.event === 'SORA法開始');
-        if (startEvent && newTimestamp < startEvent.timestamp) {
-            alert("SORA法開始以前の時刻は入力できません");
-            return;
-        }
+        if (startEvent && newTimestamp < startEvent.timestamp) { alert("SORA法開始以前の時刻は入力できません"); return; }
 
         const targetIndex = soraData.findIndex(d => d.id === id);
         if(targetIndex > -1) {
             soraData[targetIndex].timestamp = newTimestamp;
-            soraData[targetIndex].event = eventInput;
+            soraData[targetIndex].event = document.getElementById('editEvent').value;
             soraData.sort((a, b) => b.timestamp - a.timestamp);
-            
-            updateAllDisplays();
-            saveData();
-            editModalInstance.hide();
-            renderTable();
-            
+            updateAllDisplays(); saveData(); editModalInstance.hide(); renderTable();
             if (soraData.length > 0) {
                  const latest = soraData[0];
                  checkFeedback(latest.event, latest.durationMs);
-                 if (latest.event === '食事' || latest.event === 'SORA法開始') {
-                     startTimer();
-                 } else if (latest.event === '嘔吐') {
-                     stopTimer();
-                     startTimer(); 
-                 } else {
-                     stopTimer();
-                 }
+                 if (latest.event === '食事' || latest.event === 'SORA法開始') startTimer();
+                 else if (latest.event === '嘔吐') { stopTimer(); startTimer(); }
+                 else stopTimer();
             }
         }
     }
 
-    // ★新機能：記録の削除
     function deleteEntry() {
         const id = parseInt(document.getElementById('editId').value);
         if (!confirm("本当にこの記録を削除しますか？\n（削除後は元に戻せません）")) return;
-
-        // 削除処理
         soraData = soraData.filter(d => d.id !== id);
-        
-        // 再計算と画面更新
-        updateAllDisplays();
-        saveData();
-        
-        // モーダルを閉じる
-        editModalInstance.hide();
-        renderTable();
-
-        // 削除後にデータが残っているかチェックしてタイマー制御
+        updateAllDisplays(); saveData(); editModalInstance.hide(); renderTable();
         if (soraData.length > 0) {
              const latest = soraData[0];
              checkFeedback(latest.event, latest.durationMs);
-             if (latest.event === '食事' || latest.event === 'SORA法開始') {
-                 startTimer();
-             } else if (latest.event === '嘔吐') {
-                 stopTimer();
-                 startTimer();
-             } else {
-                 stopTimer();
-             }
+             if (latest.event === '食事' || latest.event === 'SORA法開始') startTimer();
+             else if (latest.event === '嘔吐') { stopTimer(); startTimer(); }
+             else stopTimer();
         } else {
-            // 全削除された場合
             stopTimer();
             document.getElementById('timerDisplay').textContent = "0日 0時間 0分 0秒";
             document.getElementById('bestDurationDisplay').textContent = "（未計測）";
             document.getElementById('messageDisplay').textContent = "（ここにメッセージが表示されます）";
+            
+            historicalMaxMs = 0;
+            currentSessionStartTime = null;
+            updateSoraGrowth(0, 0);
             updateButtonState();
         }
     }
 
-    function createAmuletButtons() {
-        const container = document.getElementById('amuletButtonsContainer');
-        container.innerHTML = "";
-        if (typeof AMULETS !== 'undefined') {
-            AMULETS.forEach((amulet, index) => {
-                const btn = document.createElement('button');
-                btn.className = 'amulet-list-btn';
-                btn.textContent = amulet.title;
-                btn.onclick = () => showAmuletContent(index);
-                container.appendChild(btn);
-            });
-        } else {
-            container.innerHTML = "<p>アミュレットデータの読み込みに失敗しました。</p>";
-        }
-    }
-
-    // 画面切り替え用関数群
-    function showMainView() {
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        document.getElementById('mainView').classList.add('active');
-        window.scrollTo(0, 0);
-    }
-
-    function showUsageView() {
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        document.getElementById('usageView').classList.add('active');
-        window.scrollTo(0, 0);
-    }
-
-    function showHistoryView() {
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        document.getElementById('historyView').classList.add('active');
-        window.scrollTo(0, 0);
-    }
-
-    function showAmuletList() {
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        document.getElementById('amuletListView').classList.add('active');
-        window.scrollTo(0, 0);
-    }
-
-    function showAmuletContent(index) {
-        const data = AMULETS[index];
-        document.getElementById('amuletDetailTitle').textContent = data.title;
-        document.getElementById('amuletDetailText').textContent = data.content;
-        document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
-        document.getElementById('amuletContentView').classList.add('active');
-        window.scrollTo(0, 0);
-    }
+    function showMainView() { document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); document.getElementById('mainView').classList.add('active'); window.scrollTo(0, 0); }
+    function showUsageView() { document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); document.getElementById('usageView').classList.add('active'); window.scrollTo(0, 0); }
+    function showHistoryView() { document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); document.getElementById('historyView').classList.add('active'); window.scrollTo(0, 0); }
+    function showAmuletList() { document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active')); document.getElementById('amuletListView').classList.add('active'); window.scrollTo(0, 0); }
 </script>
 </body>
 </html>
