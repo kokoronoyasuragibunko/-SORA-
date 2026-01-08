@@ -25,12 +25,24 @@
     
     <meta name="theme-color" content="#f0f4f8">
     <style>
-        body { background-color: #fcfcfc; font-family: "Helvetica Neue", Arial, sans-serif; user-select: none; padding-bottom: 50px; display: none; }
+        /* ▼▼▼ v5.8 変更点: 背景画像を 0.png に設定 ▼▼▼ */
+        body { 
+            background-color: #fcfcfc; 
+            background-image: url('0.png'); /* 全体の背景 */
+            background-size: cover;          /* 必要に応じて変更してください（repeatなど） */
+            background-attachment: fixed;
+            font-family: "Helvetica Neue", Arial, sans-serif; 
+            user-select: none; 
+            padding-bottom: 50px; 
+            display: none; 
+        }
         .view-section { display: none; }
         .view-section.active { display: block; }
         
         .timer-card { 
-            background: white; 
+            background: white; /* 読み込み失敗時の色 */
+            background-image: url('0.png'); /* 時計エリアの背景 */
+            background-size: cover;
             border-radius: 20px; 
             padding: 25px 15px; 
             box-shadow: 0 8px 15px rgba(0,100,255,0.1); 
@@ -50,16 +62,16 @@
             font-variant-numeric: tabular-nums; 
             margin: 5px 0; 
             line-height: 1.2; 
-            text-shadow: 1px 1px 0px rgba(0,0,0,0.05); 
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.8); /* 背景があるため文字を見やすく */
             white-space: nowrap; 
         }
 
-        /* ラベルのスタイルを共通化 */
         .timer-label, .best-record-label { 
             font-size: 1.2rem; 
             color: #555; 
             font-weight: bold; 
             margin-bottom: 5px; 
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
         }
 
         /* SORA画像エリア */
@@ -86,7 +98,7 @@
             font-size: 0.9rem;
             color: #888;
             font-weight: bold;
-            background: #f8f9fa;
+            background: #f8f9fa; /* ここは読みやすさ優先で薄い白背景のまま */
             padding: 5px 12px;
             border-radius: 15px;
             display: inline-block;
@@ -105,6 +117,8 @@
 
         .best-record-box { 
             background-color: #fffaf0; 
+            background-image: url('0.png'); /* ここも0.pngにする場合 */
+            /* 重ねて見にくくなる場合は削除してください */
             border: 2px solid #feebc8; 
             width: 100%; 
             margin-top: 10px;
@@ -117,13 +131,32 @@
             line-height: 1.2; 
             white-space: nowrap;
             font-variant-numeric: tabular-nums;
-            text-shadow: 1px 1px 0px rgba(0,0,0,0.05);
+            text-shadow: 1px 1px 0px rgba(255,255,255,0.8);
         }
 
-        .message-box { background-color: #e7f1ff; border: 2px solid #b6d4fe; border-radius: 10px; padding: 15px; text-align: left; margin-top: 15px; }
+        .message-box { 
+            background-color: #e7f1ff; 
+            background-image: url('0.png'); /* メッセージエリアも */
+            border: 2px solid #b6d4fe; 
+            border-radius: 10px; 
+            padding: 15px; 
+            text-align: left; 
+            margin-top: 15px; 
+        }
         .message-label { font-size: 0.9rem; color: #084298; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; }
         .message-value { font-size: 1.0rem; color: #333; line-height: 1.6; }
-        .action-group-box { background-color: #fff; border: 2px solid #e1e8ed; border-radius: 15px; padding: 20px 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        
+        .action-group-box { 
+            background-color: #fff; 
+            background-image: url('0.png'); /* ボタンエリアの背景 */
+            background-size: cover;
+            border: 2px solid #e1e8ed; 
+            border-radius: 15px; 
+            padding: 20px 15px; 
+            margin-bottom: 15px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+        }
+        
         .btn-custom { width: 100%; padding: 15px; font-weight: bold; border-radius: 12px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s; }
         .btn-custom:not([disabled]):not(.disabled) { filter: brightness(100%); box-shadow: 0 4px 6px rgba(0,0,0,0.2); opacity: 1; }
         .btn-custom[disabled], .btn-custom.disabled { opacity: 0.4; pointer-events: none; filter: grayscale(20%); box-shadow: none; }
@@ -131,22 +164,64 @@
         .btn-amulet:hover { background-color: #59359a; color: white; }
         .btn-history, .btn-history:disabled { background-color: #198754; color: white; border: none; margin-bottom: 12px; }
         .btn-history:hover { background-color: #157347; color: white; }
-        .history-section { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        
+        .history-section { 
+            background: white; 
+            background-image: url('0.png');
+            border-radius: 15px; 
+            padding: 15px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+        }
         .table-responsive { font-size: 0.85rem; }
         .date-input-container { background: #f8f9fa; padding: 10px; border-radius: 10px; margin-top: 15px; border: 1px solid #dee2e6; }
-        .amulet-list-btn { text-align: left; white-space: normal; margin-bottom: 10px; font-size: 0.95rem; padding: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 10px; color: #333; width: 100%; transition: 0.2s; }
+        
+        .amulet-list-btn { 
+            text-align: left; 
+            white-space: normal; 
+            margin-bottom: 10px; 
+            font-size: 0.95rem; 
+            padding: 15px; 
+            background-color: #fff; 
+            background-image: url('0.png');
+            border: 1px solid #ddd; 
+            border-radius: 10px; 
+            color: #333; 
+            width: 100%; 
+            transition: 0.2s; 
+        }
         .amulet-list-btn:hover { background-color: #f0f4f8; border-color: #6f42c1; }
-        .amulet-content-box { background: white; padding: 20px; border-radius: 15px; line-height: 1.8; font-size: 1rem; white-space: pre-wrap; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        .amulet-content-box { 
+            background: white; 
+            background-image: url('0.png');
+            padding: 20px; 
+            border-radius: 15px; 
+            line-height: 1.8; 
+            font-size: 1rem; 
+            white-space: pre-wrap; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+        }
         .amulet-title { color: #6f42c1; font-weight: bold; border-bottom: 2px solid #e1e8ed; padding-bottom: 10px; margin-bottom: 10px; }
+        
         .back-top-btn { margin-top: 20px; width: 100%; }
         .btn-update { background-color: #ffc107; color: #000; border: none; font-size: 0.8rem; padding: 10px; margin-top: 5px; }
-        .usage-text { background: #fff; padding: 20px; border-radius: 15px; line-height: 1.8; font-size: 1rem; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        
+        .usage-text { 
+            background: #fff; 
+            background-image: url('0.png');
+            padding: 20px; 
+            border-radius: 15px; 
+            line-height: 1.8; 
+            font-size: 1rem; 
+            color: #333; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+        }
     </style>
 </head>
 <body>
 
 <div id="mainView" class="container py-3 view-section active" style="max-width: 600px;">
-    <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法アプリ</h4>
+    <h4 class="text-center mb-3" style="color: #555; font-weight:bold; text-shadow: 1px 1px 0px rgba(255,255,255,0.8);">SORA法アプリ</h4>
 
     <div class="timer-card">
         <div id="displayVersionTop" class="app-version"></div> 
@@ -294,7 +369,6 @@
             <select id="editEvent" class="form-select">
                 <option value="食事">食事</option>
                 <option value="嘔吐">嘔吐</option>
-                <option value="SORA法開始">SORA法開始</option>
             </select>
         </div>
         <hr>
@@ -311,7 +385,7 @@
 </div>
 
 <script>
-    const APP_VERSION = 'v5.7'; // 
+    const APP_VERSION = 'v5.8'; // SORAアプリ v5.8
 
     document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('displayVersionTop').textContent = APP_VERSION;
@@ -375,7 +449,7 @@
     let editModalInstance;
     let timerInterval;
 
-    let historicalMaxMs = 0; // これはボタンを押したときにのみ更新される確定した最長時間
+    let historicalMaxMs = 0;
     let currentSessionStartTime = null;
 
     window.onload = function() {
@@ -384,7 +458,7 @@
         
         updateButtonState();
         runFunctionF(); 
-        calculateBestDuration(); // ロード時に計算
+        calculateBestDuration(); 
         renderTable();
         updateAllDisplays();
 
@@ -442,7 +516,6 @@
     function updateAllDisplays() {
         if (soraData.length > 0) {
             runFunctionF();
-            // calculateBestDuration(); ←リアルタイム更新では呼ばないようにする
             renderTable();
             updateTimer(!!timerInterval);
             const latestLog = soraData[0];
@@ -462,7 +535,7 @@
         soraData.unshift(newEntry);
         soraData.sort((a, b) => b.timestamp - a.timestamp);
         
-        // ★イベント記録時にベスト時間を再計算して更新する
+        // イベント記録時にベスト時間を再計算
         calculateBestDuration();
 
         if (eventName === 'SORA法開始') startTimer();
@@ -553,7 +626,7 @@
         }
     }
 
-    // ★ v5.7: ベスト記録の計算ロジック（ボタン押下時のみ実行）
+    // ベスト記録の計算（v5.7準拠：ボタン押下時のみ更新）
     function calculateBestDuration() {
         const display = document.getElementById('bestDurationDisplay');
         
@@ -561,33 +634,21 @@
         historicalMaxMs = 0;
         currentSessionStartTime = null;
 
-        // 古い順にソートしてシミュレーションする
         const ordered = [...soraData].sort((a, b) => a.timestamp - b.timestamp);
-        
-        // 1. まずSORA法開始を探す
         const startIndex = ordered.findIndex(d => d.event === 'SORA法開始');
         
         if (startIndex !== -1) {
             let lastBaseTime = ordered[startIndex].timestamp;
-            currentSessionStartTime = lastBaseTime; // 初期値
+            currentSessionStartTime = lastBaseTime; 
 
-            // 開始以降のイベントを順番に見ていく
             for (let i = startIndex + 1; i < ordered.length; i++) {
                 const evt = ordered[i];
                 const diff = evt.timestamp - lastBaseTime;
 
                 if (evt.event === '食事') {
-                    // 食事までの期間がこれまでの最大を超えていれば更新
-                    if (diff > tempMax) {
-                        tempMax = diff;
-                    }
-                    // 食事では lastBaseTime (起算点) はリセットしない！
+                    if (diff > tempMax) tempMax = diff;
                 } else if (evt.event === '嘔吐') {
-                    // 嘔吐までの期間がこれまでの最大を超えていれば更新
-                    if (diff > tempMax) {
-                        tempMax = diff;
-                    }
-                    // 嘔吐したら起算点をリセット
+                    if (diff > tempMax) tempMax = diff;
                     lastBaseTime = evt.timestamp;
                     currentSessionStartTime = lastBaseTime;
                 }
@@ -595,15 +656,10 @@
         }
         
         historicalMaxMs = tempMax; 
-        
-        // 表示を更新（リアルタイムでは動かさない）
         display.textContent = tempMax > 0 ? formatDuration(tempMax) : "（未計測）";
-
-        // 画像の更新もここで行う（確定した記録で画像を決めるため）
         updateSoraImage(historicalMaxMs);
     }
     
-    // 画像更新専用関数
     function updateSoraImage(bestMs) {
         const soraImg = document.getElementById('soraImage');
         const HOUR = 3600000;
@@ -631,14 +687,11 @@
         soraImg.style.display = 'block';
     }
 
-    // カウントダウン表示の更新（リアルタイム）
-    // ターゲットは historicalMaxMs（確定ベスト）によって決まる
     function updateCountdown(currentTimerMs) {
         const soraCount = document.getElementById('soraCountdown');
         const HOUR = 3600000;
         const DAY = 86400000;
         
-        // 現在のベスト記録に基づいて「次の目標」を決める
         const t = historicalMaxMs; 
         let nextTargetMs = 3 * HOUR;
 
@@ -675,7 +728,6 @@
                 soraCount.textContent = text;
                 soraCount.style.display = 'inline-block';
             } else {
-                // 時間が来ても、ボタンを押して記録更新するまでは「成長中...」にしておく
                 soraCount.textContent = "成長中...（記録すると変化します）";
             }
         } else {
@@ -699,7 +751,6 @@
             display.textContent = "0日 0時間 0分 0秒";
         }
         
-        // カウントダウンだけはリアルタイム更新
         updateCountdown(currentTimerMs);
     }
 
@@ -719,12 +770,11 @@
         tbody.innerHTML = "";
         soraData.forEach((row) => {
             const tr = document.createElement('tr');
-            // 編集もできる
             const isStartRow = (row.event === 'SORA法開始');
             let eventColor = "";
             if (row.event === "食事") eventColor = "text-success fw-bold";
             else if (row.event === "嘔吐") eventColor = "text-danger fw-bold";
-            tr.innerHTML = `<td>${formatDate(new Date(row.timestamp), true)}</td><td class="${eventColor}">${row.event}</td><td style="font-weight:bold;">${row.durationStr || "-"}</td><td><button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${row.id})">編集</button></td>`;
+            tr.innerHTML = `<td>${formatDate(new Date(row.timestamp), true)}</td><td class="${eventColor}">${row.event}</td><td style="font-weight:bold;">${row.durationStr || "-"}</td><td><button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${row.id})" ${isStartRow ? 'disabled' : ''}>編集</button></td>`;
             tbody.appendChild(tr);
         });
     }
@@ -775,8 +825,7 @@
     
     function openEdit(id) {
         const target = soraData.find(d => d.id === id);
-        if(!target) { alert("編集できません。"); return; }
-        
+        if(!target || target.event === 'SORA法開始') { alert("編集できません。"); return; }
         document.getElementById('editId').value = target.id;
         document.getElementById('editEvent').value = target.event;
         const date = new Date(target.timestamp);
@@ -792,21 +841,13 @@
         const newTimestamp = new Date(timeInput).getTime();
         const nowMs = new Date().getTime();
         if (newTimestamp > nowMs) { alert("未来の日時は入力できません。"); return; }
-        
-        // デバッグ版のためSORA法開始の編集チェックを緩める（必要であれば）
-        // ここではv5.6.1と同じく、他のイベントの場合は開始前チェックを入れる
-        const editEventVal = document.getElementById('editEvent').value;
-        if (editEventVal !== 'SORA法開始') {
-            const startEvent = soraData.find(d => d.event === 'SORA法開始');
-            if (startEvent && startEvent.id !== id && newTimestamp < startEvent.timestamp) { 
-                alert("SORA法開始以前の時刻は入力できません"); return; 
-            }
-        }
+        const startEvent = soraData.find(d => d.event === 'SORA法開始');
+        if (startEvent && newTimestamp < startEvent.timestamp) { alert("SORA法開始以前の時刻は入力できません"); return; }
 
         const targetIndex = soraData.findIndex(d => d.id === id);
         if(targetIndex > -1) {
             soraData[targetIndex].timestamp = newTimestamp;
-            soraData[targetIndex].event = editEventVal;
+            soraData[targetIndex].event = document.getElementById('editEvent').value;
             soraData.sort((a, b) => b.timestamp - a.timestamp);
             
             // ★編集時もベスト時間を再計算
