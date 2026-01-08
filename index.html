@@ -10,7 +10,7 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SORA法 アプリ v0.962</title>
+    <title>SORA法 アプリ</title>
     
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -25,131 +25,24 @@
     
     <meta name="theme-color" content="#f0f4f8">
     <style>
-        body { 
-            background-image: url('0.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
-            background-color: #fcfcfc;
-            
-            font-family: "Helvetica Neue", Arial, sans-serif; 
-            user-select: none; 
-            padding-bottom: 50px; 
-            display: none; /* 認証前は非表示 */
-        }
-
-        /* --- ローディング画面のスタイル --- */
-        #loading-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: white; /* 背景は白 */
-            z-index: 9999; /* 最前面に表示 */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.5s ease; /* ふわっと消えるアニメーション */
-        }
-        
-        .loading-logo {
-            width: 250px; 
-            max-width: 80%; 
-            height: auto;
-            object-fit: contain;
-            margin-bottom: 20px;
-        }
-        
-        .loading-text {
-            font-size: 1.2rem;
-            color: #555;
-            font-weight: bold;
-            letter-spacing: 1px;
-            margin-top: 10px;
-        }
-
+        body { background-color: #fcfcfc; font-family: "Helvetica Neue", Arial, sans-serif; user-select: none; padding-bottom: 50px; display: none; }
         .view-section { display: none; }
         .view-section.active { display: block; }
         
-        /* --- 背景透過スタイル --- */
         .timer-card { 
-            background: rgba(255, 255, 255, 0.4);
+            background: white; 
             border-radius: 20px; 
             padding: 25px 15px; 
-            box-shadow: 0 8px 15px rgba(0, 100, 255, 0.1); 
+            box-shadow: 0 8px 15px rgba(0,100,255,0.1); 
             margin-bottom: 25px; 
             text-align: center; 
-            border: 1px solid rgba(255, 255, 255, 0.5);
+            border: 1px solid #e1e8ed;
             position: relative;
-            backdrop-filter: blur(5px);
         }
 
-        .action-group-box { 
-            background-color: rgba(255, 255, 255, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 15px; 
-            padding: 20px 15px; 
-            margin-bottom: 15px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            backdrop-filter: blur(5px);
-        }
+        .app-version { position: absolute; top: 10px; right: 15px; font-size: 0.7rem; color: #ccc; }
         
-        .history-section { 
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 15px; 
-            padding: 15px; 
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(5px);
-        }
-
-        .amulet-content-box { 
-            background: rgba(255, 255, 255, 0.4);
-            padding: 20px; 
-            border-radius: 15px; 
-            line-height: 1.8; 
-            font-size: 1rem; 
-            white-space: pre-wrap; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(5px);
-        }
-        
-        .usage-text { 
-            background: rgba(255, 255, 255, 0.4);
-            padding: 20px; 
-            border-radius: 15px; 
-            line-height: 1.8; 
-            font-size: 1rem; 
-            color: #333; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(5px);
-        }
-
-        .amulet-title { 
-            color: #6f42c1; 
-            font-weight: bold; 
-            border-bottom: 1px solid rgba(111, 66, 193, 0.3); 
-            padding-bottom: 10px; 
-            margin-bottom: 10px; 
-            background: rgba(255, 255, 255, 0.5);
-            padding: 10px; 
-            border-radius: 10px;
-            backdrop-filter: blur(5px);
-        }
-
-        .message-box { background-color: rgba(231, 241, 255, 0.7); border: 1px solid rgba(182, 212, 254, 0.7); }
-        .best-record-box { background-color: rgba(255, 250, 240, 0.7); border: 1px solid rgba(254, 235, 200, 0.7); }
-        .date-input-container { background: rgba(248, 249, 250, 0.6); border: 1px solid rgba(222, 226, 230, 0.6); }
-        .amulet-list-btn { background-color: rgba(255, 255, 255, 0.7); border: 1px solid rgba(221, 221, 221, 0.7); }
-        .amulet-list-btn:hover { background-color: rgba(240, 244, 248, 0.9); }
-        
-        .app-version { position: absolute; top: 10px; right: 15px; font-size: 0.7rem; color: #555; }
-        
+        /* メインタイマー */
         .timer-display { 
             font-size: clamp(1.8rem, 7vw, 3rem);
             font-weight: 900; 
@@ -157,17 +50,19 @@
             font-variant-numeric: tabular-nums; 
             margin: 5px 0; 
             line-height: 1.2; 
-            text-shadow: 1px 1px 0px rgba(255,255,255,0.5); 
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.05); 
             white-space: nowrap; 
         }
 
+        /* ラベルのスタイルを共通化 */
         .timer-label, .best-record-label { 
             font-size: 1.2rem; 
-            color: #333; 
+            color: #555; 
             font-weight: bold; 
             margin-bottom: 5px; 
         }
 
+        /* SORA画像エリア */
         .sora-container {
             margin: 20px 0;
             display: flex;
@@ -181,17 +76,17 @@
             height: 150px;
             object-fit: contain;
             margin-bottom: 10px;
-            background-color: rgba(250, 250, 250, 0.5); 
+            background-color: #fafafa; 
             border-radius: 50%;
-            border: 4px solid rgba(255, 255, 255, 0.8);
+            border: 4px solid #fff;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
         .sora-countdown {
             font-size: 0.9rem;
-            color: #666;
+            color: #888;
             font-weight: bold;
-            background: rgba(248, 249, 250, 0.7);
+            background: #f8f9fa;
             padding: 5px 12px;
             border-radius: 15px;
             display: inline-block;
@@ -207,6 +102,13 @@
             justify-content: center;
             align-items: center;
         }
+
+        .best-record-box { 
+            background-color: #fffaf0; 
+            border: 2px solid #feebc8; 
+            width: 100%; 
+            margin-top: 10px;
+        }
         
         .best-record-value { 
             font-size: clamp(1.8rem, 7vw, 3rem);
@@ -215,12 +117,13 @@
             line-height: 1.2; 
             white-space: nowrap;
             font-variant-numeric: tabular-nums;
-            text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.05);
         }
 
-        .message-box { border-radius: 10px; padding: 15px; text-align: left; margin-top: 15px; }
+        .message-box { background-color: #e7f1ff; border: 2px solid #b6d4fe; border-radius: 10px; padding: 15px; text-align: left; margin-top: 15px; }
         .message-label { font-size: 0.9rem; color: #084298; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; }
-        .message-value { font-size: 1.0rem; color: #222; line-height: 1.6; }
+        .message-value { font-size: 1.0rem; color: #333; line-height: 1.6; }
+        .action-group-box { background-color: #fff; border: 2px solid #e1e8ed; border-radius: 15px; padding: 20px 15px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .btn-custom { width: 100%; padding: 15px; font-weight: bold; border-radius: 12px; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s; }
         .btn-custom:not([disabled]):not(.disabled) { filter: brightness(100%); box-shadow: 0 4px 6px rgba(0,0,0,0.2); opacity: 1; }
         .btn-custom[disabled], .btn-custom.disabled { opacity: 0.4; pointer-events: none; filter: grayscale(20%); box-shadow: none; }
@@ -228,23 +131,22 @@
         .btn-amulet:hover { background-color: #59359a; color: white; }
         .btn-history, .btn-history:disabled { background-color: #198754; color: white; border: none; margin-bottom: 12px; }
         .btn-history:hover { background-color: #157347; color: white; }
+        .history-section { background: white; border-radius: 15px; padding: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .table-responsive { font-size: 0.85rem; }
-        .date-input-container { padding: 10px; border-radius: 10px; margin-top: 15px; }
-        .amulet-list-btn { text-align: left; white-space: normal; margin-bottom: 10px; font-size: 0.95rem; padding: 15px; border-radius: 10px; color: #333; width: 100%; transition: 0.2s; }
-        
+        .date-input-container { background: #f8f9fa; padding: 10px; border-radius: 10px; margin-top: 15px; border: 1px solid #dee2e6; }
+        .amulet-list-btn { text-align: left; white-space: normal; margin-bottom: 10px; font-size: 0.95rem; padding: 15px; background-color: #fff; border: 1px solid #ddd; border-radius: 10px; color: #333; width: 100%; transition: 0.2s; }
+        .amulet-list-btn:hover { background-color: #f0f4f8; border-color: #6f42c1; }
+        .amulet-content-box { background: white; padding: 20px; border-radius: 15px; line-height: 1.8; font-size: 1rem; white-space: pre-wrap; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .amulet-title { color: #6f42c1; font-weight: bold; border-bottom: 2px solid #e1e8ed; padding-bottom: 10px; margin-bottom: 10px; }
         .back-top-btn { margin-top: 20px; width: 100%; }
         .btn-update { background-color: #ffc107; color: #000; border: none; font-size: 0.8rem; padding: 10px; margin-top: 5px; }
+        .usage-text { background: #fff; padding: 20px; border-radius: 15px; line-height: 1.8; font-size: 1rem; color: #333; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body>
 
-<div id="loading-screen">
-    <img src="logo.png" alt="こころの安らぎ文庫" class="loading-logo">
-    <div class="loading-text">Now Loading...</div>
-</div>
-
 <div id="mainView" class="container py-3 view-section active" style="max-width: 600px;">
-    <h4 class="text-center mb-3" style="color: #333; font-weight:bold; text-shadow: 1px 1px 2px rgba(255,255,255,0.8);">SORA法アプリ</h4>
+    <h4 class="text-center mb-3" style="color: #555; font-weight:bold;">SORA法アプリ</h4>
 
     <div class="timer-card">
         <div id="displayVersionTop" class="app-version"></div> 
@@ -273,7 +175,7 @@
     <div class="mb-5">
         <div class="row mb-3 g-2">
              <div class="col-12">
-                <button class="btn btn-outline-primary btn-custom mb-2" onclick="showUsageView()" style="padding: 10px; font-size: 1rem; background-color: rgba(255,255,255,0.6);">📖 使い方を見る</button>
+                <button class="btn btn-outline-primary btn-custom mb-2" onclick="showUsageView()" style="padding: 10px; font-size: 1rem;">📖 使い方を見る</button>
              </div>
              <div class="col-12">
                 <button id="btnStart" class="btn btn-primary btn-custom" onclick="logEvent('SORA法開始')">🚀 嘔吐を卒業してSORA法を始める</button>
@@ -291,7 +193,7 @@
             </div>
             <div class="date-input-container">
                 <label class="date-input-label" style="font-size:0.85rem; color:#555; font-weight:bold; margin-bottom:5px; display:block;">🕒 時間を指定して入力</label>
-                <input type="datetime-local" id="manualTimeInput" class="form-control" style="background-color: rgba(255,255,255,0.8);">
+                <input type="datetime-local" id="manualTimeInput" class="form-control">
             </div>
         </div>
 
@@ -307,26 +209,25 @@
             </div>
             
             <div class="col-12 mt-4 text-center">
-                <a href="https://docs.google.com/forms/d/e/1FAIpQLScMy5P2lNA548npTtKhmXODihrMTP12l3hxvhEqfjmGIcv1Qw/viewform?usp=header" target="_blank" class="btn btn-outline-secondary btn-sm mb-2" style="border-radius: 20px; width: 100%; background-color: rgba(255,255,255,0.6);">
+                <a href="https://docs.google.com/forms/d/e/1FAIpQLScMy5P2lNA548npTtKhmXODihrMTP12l3hxvhEqfjmGIcv1Qw/viewform?usp=header" target="_blank" class="btn btn-outline-secondary btn-sm mb-2" style="border-radius: 20px; width: 100%;">
                     📩 お問い合わせ
                 </a>
-                <a href="https://github.com/kokoronoyasuragibunko/-SORA-/releases" target="_blank" class="btn btn-outline-info btn-sm mb-3" style="border-radius: 20px; width: 100%; color: #0dcaf0; border-color: #0dcaf0; background-color: rgba(255,255,255,0.6);">
+                <a href="https://github.com/kokoronoyasuragibunko/-SORA-/releases" target="_blank" class="btn btn-outline-info btn-sm mb-3" style="border-radius: 20px; width: 100%; color: #0dcaf0; border-color: #0dcaf0;">
                     🔔 更新履歴 (GitHub)
                 </a>
                 <hr style="opacity: 0.1; margin: 10px 0;">
-                <p style="font-size:0.75rem; color:#666; margin-bottom:5px; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);">アプリの調子が悪いとき</p>
+                <p style="font-size:0.75rem; color:#aaa; margin-bottom:5px;">アプリの調子が悪いとき</p>
                 <button class="btn btn-update btn-custom" onclick="forceAppUpdate()" style="font-size: 0.8rem; padding: 8px;">
                     ⚡ アプリを強制更新・再読み込み
                 </button>
-                <p id="displayVersionBottom" class="mt-3" style="font-size:0.7rem; color:#666; margin-bottom: 2px; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);"></p>
-                <div style="font-size:0.7rem; color:#666; text-shadow: 1px 1px 1px rgba(255,255,255,0.5);">&copy; 2026 こころの安らぎ文庫 Ryo Kohaku</div>
+                <p id="displayVersionBottom" class="mt-3" style="font-size:0.7rem; color:#ccc;"></p>
             </div>
         </div>
     </div>
 </div>
 
 <div id="usageView" class="container py-3 view-section" style="max-width: 600px;">
-    <h4 class="text-center mb-4" style="color: #0d6efd; font-weight:bold; background: rgba(255,255,255,0.5); padding:5px; border-radius:10px; backdrop-filter: blur(5px);">📖 使い方</h4>
+    <h4 class="text-center mb-4" style="color: #0d6efd; font-weight:bold;">📖 使い方</h4>
     <div class="usage-text">
         <p><strong>①「嘔吐を卒業してSORA法を始める」を押す</strong><br>
         まずはこのボタンを押してスタートしましょう。</p>
@@ -339,11 +240,11 @@
 </div>
 
 <div id="historyView" class="container py-3 view-section" style="max-width: 600px;">
-    <h4 class="text-center mb-3" style="color: #198754; font-weight:bold; background: rgba(255,255,255,0.5); padding:5px; border-radius:10px; backdrop-filter: blur(5px);">📝 記録一覧</h4>
-    <button class="btn btn-outline-secondary w-100 mb-3" onclick="showMainView()" style="background-color:rgba(255,255,255,0.6);">🔙 戻る</button>
+    <h4 class="text-center mb-3" style="color: #198754; font-weight:bold;">📝 記録一覧</h4>
+    <button class="btn btn-outline-secondary w-100 mb-3" onclick="showMainView()">🔙 戻る</button>
     <div class="history-section">
         <div class="table-responsive">
-            <table class="table table-striped align-middle" style="--bs-table-bg: transparent; --bs-table-striped-bg: rgba(0,0,0,0.03);">
+            <table class="table table-striped align-middle">
                 <thead>
                     <tr>
                         <th style="width:25%">日時</th>
@@ -360,34 +261,24 @@
 </div>
 
 <div id="amuletListView" class="container py-3 view-section" style="max-width: 600px;">
-    <h4 class="text-center mb-4" style="color: #6f42c1; font-weight:bold; background: rgba(255,255,255,0.5); padding:5px; border-radius:10px; backdrop-filter: blur(5px);">🛡️ リカバリーアミュレット一覧</h4>
-    
-    <button class="btn btn-secondary w-100 mb-3" onclick="showMainView()">🏠 TOPへ戻る</button>
-
+    <h4 class="text-center mb-4" style="color: #6f42c1; font-weight:bold;">🛡️ リカバリーアミュレット一覧</h4>
     <div id="amuletButtonsContainer">
-        <p class="text-center text-muted" style="background: rgba(255,255,255,0.5); padding:10px; border-radius:10px; backdrop-filter: blur(5px);">データを読み込んでいます...</p>
+        <p class="text-center text-muted">データを読み込んでいます...</p>
     </div>
     <button class="btn btn-secondary back-top-btn" onclick="showMainView()">🏠 TOPへ戻る</button>
 </div>
 
 <div id="amuletContentView" class="container py-3 view-section" style="max-width: 600px;">
     <h4 id="amuletDetailTitle" class="amulet-title">タイトル</h4>
-    
-    <div class="d-flex gap-2 mb-3">
-        <button class="btn btn-outline-secondary flex-fill" onclick="showAmuletList()" style="background-color:rgba(255,255,255,0.6);">🔙 一覧へ戻る</button>
-        <button class="btn btn-secondary flex-fill" onclick="showMainView()">🏠 TOPへ戻る</button>
-    </div>
-
     <div id="amuletDetailText" class="amulet-content-box">
         </div>
-        
-    <button class="btn btn-outline-secondary back-top-btn" onclick="showAmuletList()" style="background-color:rgba(255,255,255,0.6);">🔙 一覧へ戻る</button>
+    <button class="btn btn-outline-secondary back-top-btn" onclick="showAmuletList()">🔙 一覧へ戻る</button>
     <button class="btn btn-secondary back-top-btn" onclick="showMainView()">🏠 TOPへ戻る</button>
 </div>
 
 <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);">
+    <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">記録の編集・削除</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -403,6 +294,7 @@
             <select id="editEvent" class="form-select">
                 <option value="食事">食事</option>
                 <option value="嘔吐">嘔吐</option>
+                <option value="SORA法開始">SORA法開始</option>
             </select>
         </div>
         <hr>
@@ -419,7 +311,7 @@
 </div>
 
 <script>
-    const APP_VERSION = 'v0.962'; // SORAアプリ v0.962
+    const APP_VERSION = 'v5.7'; // 
 
     document.addEventListener("DOMContentLoaded", function() {
         document.getElementById('displayVersionTop').textContent = APP_VERSION;
@@ -483,7 +375,7 @@
     let editModalInstance;
     let timerInterval;
 
-    let historicalMaxMs = 0;
+    let historicalMaxMs = 0; // これはボタンを押したときにのみ更新される確定した最長時間
     let currentSessionStartTime = null;
 
     window.onload = function() {
@@ -492,7 +384,7 @@
         
         updateButtonState();
         runFunctionF(); 
-        calculateBestDuration(); 
+        calculateBestDuration(); // ロード時に計算
         renderTable();
         updateAllDisplays();
 
@@ -500,23 +392,12 @@
             fetchAndParseAmulets();
         }
 
-        // データが存在すれば、イベントの種類に関わらずタイマーをスタートさせる
-        if (soraData.length > 0) {
+        const latestEvent = soraData[0];
+        if (latestEvent && (latestEvent.event === '食事' || latestEvent.event === 'SORA法開始')) {
              startTimer();
         } else {
              updateTimer(false); 
         }
-
-        // --- ローディング画面を消す処理 ---
-        setTimeout(() => {
-            const loader = document.getElementById('loading-screen');
-            if(loader) {
-                loader.style.opacity = '0'; // ふわっと消す
-                setTimeout(() => {
-                    loader.style.display = 'none'; // 完全に消す
-                }, 500);
-            }
-        }, 1500); // 1.5秒間表示してから消す
     };
 
     document.addEventListener("visibilitychange", function() { if (document.visibilityState === 'visible') updateAllDisplays(); });
@@ -544,7 +425,7 @@
                  p2.textContent = AMULETS[0].content;
                  container.appendChild(p2);
             } else {
-                container.innerHTML = "<p class='text-center text-muted' style='background: rgba(255,255,255,0.5); padding:10px; border-radius:10px; backdrop-filter: blur(5px);'>データがありません。</p>";
+                container.innerHTML = "<p class='text-center text-muted'>データがありません。</p>";
             }
         }
     };
@@ -552,13 +433,7 @@
     function showAmuletContent(index) {
         const data = AMULETS[index];
         document.getElementById('amuletDetailTitle').textContent = data.title;
-        
-        let content = data.content ? data.content.trim() : "";
-        if (content.startsWith("「") && content.endsWith("」")) {
-            content = content.substring(1, content.length - 1);
-        }
-        document.getElementById('amuletDetailText').textContent = content;
-
+        document.getElementById('amuletDetailText').textContent = data.content ? data.content.trim() : "";
         document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
         document.getElementById('amuletContentView').classList.add('active');
         window.scrollTo(0, 0);
@@ -567,7 +442,7 @@
     function updateAllDisplays() {
         if (soraData.length > 0) {
             runFunctionF();
-            calculateBestDuration();
+            // calculateBestDuration(); ←リアルタイム更新では呼ばないようにする
             renderTable();
             updateTimer(!!timerInterval);
             const latestLog = soraData[0];
@@ -586,9 +461,14 @@
         const newEntry = { id: generateId(), timestamp: now.getTime(), event: eventName, result: "", durationStr: "-", durationMs: 0 };
         soraData.unshift(newEntry);
         soraData.sort((a, b) => b.timestamp - a.timestamp);
+        
+        // ★イベント記録時にベスト時間を再計算して更新する
+        calculateBestDuration();
+
         if (eventName === 'SORA法開始') startTimer();
         else if (eventName === '食事') { if (!timerInterval) startTimer(); }
         else if (eventName === '嘔吐') { stopTimer(); startTimer(); }
+        
         updateAllDisplays();
         saveData();
         document.getElementById('manualTimeInput').value = '';
@@ -673,97 +553,110 @@
         }
     }
 
+    // ★ v5.7: ベスト記録の計算ロジック（ボタン押下時のみ実行）
     function calculateBestDuration() {
         const display = document.getElementById('bestDurationDisplay');
-        const startEvent = soraData.find(d => d.event === 'SORA法開始');
         
         let tempMax = 0;
         historicalMaxMs = 0;
         currentSessionStartTime = null;
 
-        if (startEvent) {
-            const ordered = [...soraData].sort((a, b) => a.timestamp - b.timestamp);
-            const vomits = ordered.filter(d => d.event === '嘔吐');
-            const meals = ordered.filter(d => d.event === '食事');
-            
-            vomits.forEach((v, index) => {
-                let prevTime = startEvent.timestamp;
-                if (index > 0) {
-                    prevTime = vomits[index - 1].timestamp;
-                }
-                const diff = v.timestamp - prevTime;
-                if (diff > tempMax) tempMax = diff;
-            });
+        // 古い順にソートしてシミュレーションする
+        const ordered = [...soraData].sort((a, b) => a.timestamp - b.timestamp);
+        
+        // 1. まずSORA法開始を探す
+        const startIndex = ordered.findIndex(d => d.event === 'SORA法開始');
+        
+        if (startIndex !== -1) {
+            let lastBaseTime = ordered[startIndex].timestamp;
+            currentSessionStartTime = lastBaseTime; // 初期値
 
-            if (vomits.length === 0) {
-                currentSessionStartTime = startEvent.timestamp;
-                if (meals.length > 0) {
-                    const latestMeal = meals[meals.length - 1];
-                    const diff = latestMeal.timestamp - startEvent.timestamp;
-                    if (diff > tempMax) tempMax = diff;
-                }
-            } else {
-                const latestVomit = vomits[vomits.length - 1];
-                currentSessionStartTime = latestVomit.timestamp;
-                if (meals.length > 0) {
-                    const latestMeal = meals[meals.length - 1];
-                    if (latestMeal.timestamp > latestVomit.timestamp) {
-                        const diff = latestMeal.timestamp - latestVomit.timestamp;
-                        if (diff > tempMax) tempMax = diff;
+            // 開始以降のイベントを順番に見ていく
+            for (let i = startIndex + 1; i < ordered.length; i++) {
+                const evt = ordered[i];
+                const diff = evt.timestamp - lastBaseTime;
+
+                if (evt.event === '食事') {
+                    // 食事までの期間がこれまでの最大を超えていれば更新
+                    if (diff > tempMax) {
+                        tempMax = diff;
                     }
+                    // 食事では lastBaseTime (起算点) はリセットしない！
+                } else if (evt.event === '嘔吐') {
+                    // 嘔吐までの期間がこれまでの最大を超えていれば更新
+                    if (diff > tempMax) {
+                        tempMax = diff;
+                    }
+                    // 嘔吐したら起算点をリセット
+                    lastBaseTime = evt.timestamp;
+                    currentSessionStartTime = lastBaseTime;
                 }
             }
         }
         
         historicalMaxMs = tempMax; 
-        display.textContent = tempMax > 0 ? formatDuration(tempMax) : "（未計測）";
-    }
-
-    function updateSoraGrowth(levelDeterminationTime, currentTimerMs) {
-        const soraImg = document.getElementById('soraImage');
-        const soraCount = document.getElementById('soraCountdown');
         
+        // 表示を更新（リアルタイムでは動かさない）
+        display.textContent = tempMax > 0 ? formatDuration(tempMax) : "（未計測）";
+
+        // 画像の更新もここで行う（確定した記録で画像を決めるため）
+        updateSoraImage(historicalMaxMs);
+    }
+    
+    // 画像更新専用関数
+    function updateSoraImage(bestMs) {
+        const soraImg = document.getElementById('soraImage');
         const HOUR = 3600000;
         const DAY = 86400000;
         
         let currentImg = "1.png";
-        let nextTargetMs = 3 * HOUR;
-
-        const t = levelDeterminationTime;
-        if (t < 3 * HOUR) {
-            currentImg = "1.png"; nextTargetMs = 3 * HOUR;
-        } else if (t < 6 * HOUR) {
-            currentImg = "2.png"; nextTargetMs = 6 * HOUR;
-        } else if (t < 12 * HOUR) {
-            currentImg = "3.png"; nextTargetMs = 12 * HOUR;
-        } else if (t < 24 * HOUR) {
-            currentImg = "4.png"; nextTargetMs = 1 * DAY;
-        } else if (t < 2 * DAY) {
-            currentImg = "5.png"; nextTargetMs = 2 * DAY;
-        } else if (t < 4 * DAY) {
-            currentImg = "6.png"; nextTargetMs = 4 * DAY;
-        } else if (t < 6 * DAY) {
-            currentImg = "7.png"; nextTargetMs = 6 * DAY;
-        } else if (t < 8 * DAY) {
-            currentImg = "8.png"; nextTargetMs = 8 * DAY;
-        } else if (t < 10 * DAY) {
-            currentImg = "9.png"; nextTargetMs = 10 * DAY;
-        } else if (t < 12 * DAY) {
-            currentImg = "10.png"; nextTargetMs = 12 * DAY;
-        } else if (t < 14 * DAY) {
-            currentImg = "11.png"; nextTargetMs = 14 * DAY;
-        } else if (t < 16 * DAY) {
-            currentImg = "12.png"; nextTargetMs = 16 * DAY;
-        } else if (t < 18 * DAY) {
-            currentImg = "13.png"; nextTargetMs = 18 * DAY;
-        } else if (t < 22 * DAY) {
-            currentImg = "14.png"; nextTargetMs = 22 * DAY;
-        } else {
-            currentImg = "15.png"; nextTargetMs = null; 
-        }
+        
+        if (bestMs < 3 * HOUR) currentImg = "1.png";
+        else if (bestMs < 6 * HOUR) currentImg = "2.png";
+        else if (bestMs < 12 * HOUR) currentImg = "3.png";
+        else if (bestMs < 24 * HOUR) currentImg = "4.png";
+        else if (bestMs < 2 * DAY) currentImg = "5.png";
+        else if (bestMs < 4 * DAY) currentImg = "6.png";
+        else if (bestMs < 6 * DAY) currentImg = "7.png";
+        else if (bestMs < 8 * DAY) currentImg = "8.png";
+        else if (bestMs < 10 * DAY) currentImg = "9.png";
+        else if (bestMs < 12 * DAY) currentImg = "10.png";
+        else if (bestMs < 14 * DAY) currentImg = "11.png";
+        else if (bestMs < 16 * DAY) currentImg = "12.png";
+        else if (bestMs < 18 * DAY) currentImg = "13.png";
+        else if (bestMs < 22 * DAY) currentImg = "14.png";
+        else currentImg = "15.png";
 
         soraImg.src = currentImg;
-        soraImg.style.display = 'block'; 
+        soraImg.style.display = 'block';
+    }
+
+    // カウントダウン表示の更新（リアルタイム）
+    // ターゲットは historicalMaxMs（確定ベスト）によって決まる
+    function updateCountdown(currentTimerMs) {
+        const soraCount = document.getElementById('soraCountdown');
+        const HOUR = 3600000;
+        const DAY = 86400000;
+        
+        // 現在のベスト記録に基づいて「次の目標」を決める
+        const t = historicalMaxMs; 
+        let nextTargetMs = 3 * HOUR;
+
+        if (t < 3 * HOUR) nextTargetMs = 3 * HOUR;
+        else if (t < 6 * HOUR) nextTargetMs = 6 * HOUR;
+        else if (t < 12 * HOUR) nextTargetMs = 12 * HOUR;
+        else if (t < 24 * HOUR) nextTargetMs = 1 * DAY;
+        else if (t < 2 * DAY) nextTargetMs = 2 * DAY;
+        else if (t < 4 * DAY) nextTargetMs = 4 * DAY;
+        else if (t < 6 * DAY) nextTargetMs = 6 * DAY;
+        else if (t < 8 * DAY) nextTargetMs = 8 * DAY;
+        else if (t < 10 * DAY) nextTargetMs = 10 * DAY;
+        else if (t < 12 * DAY) nextTargetMs = 12 * DAY;
+        else if (t < 14 * DAY) nextTargetMs = 14 * DAY;
+        else if (t < 16 * DAY) nextTargetMs = 16 * DAY;
+        else if (t < 18 * DAY) nextTargetMs = 18 * DAY;
+        else if (t < 22 * DAY) nextTargetMs = 22 * DAY;
+        else nextTargetMs = null; 
 
         if (nextTargetMs !== null) {
             const diff = nextTargetMs - currentTimerMs;
@@ -782,7 +675,8 @@
                 soraCount.textContent = text;
                 soraCount.style.display = 'inline-block';
             } else {
-                soraCount.textContent = "成長中...";
+                // 時間が来ても、ボタンを押して記録更新するまでは「成長中...」にしておく
+                soraCount.textContent = "成長中...（記録すると変化します）";
             }
         } else {
             soraCount.textContent = "SORAの次の成長まで：完全に成長しました";
@@ -795,7 +689,6 @@
     
     function updateTimer(isRunning) {
         const display = document.getElementById('timerDisplay');
-        const bestDisplay = document.getElementById('bestDurationDisplay');
         
         let currentTimerMs = 0;
         if (currentSessionStartTime !== null) {
@@ -805,14 +698,9 @@
         } else {
             display.textContent = "0日 0時間 0分 0秒";
         }
-
-        let levelDeterminationTime = Math.max(historicalMaxMs, currentTimerMs);
-
-        if (levelDeterminationTime > 0) {
-            bestDisplay.textContent = formatDuration(levelDeterminationTime);
-        }
-
-        updateSoraGrowth(levelDeterminationTime, currentTimerMs);
+        
+        // カウントダウンだけはリアルタイム更新
+        updateCountdown(currentTimerMs);
     }
 
     function updateButtonState() {
@@ -831,11 +719,12 @@
         tbody.innerHTML = "";
         soraData.forEach((row) => {
             const tr = document.createElement('tr');
+            // 編集もできる
             const isStartRow = (row.event === 'SORA法開始');
             let eventColor = "";
             if (row.event === "食事") eventColor = "text-success fw-bold";
             else if (row.event === "嘔吐") eventColor = "text-danger fw-bold";
-            tr.innerHTML = `<td>${formatDate(new Date(row.timestamp), true)}</td><td class="${eventColor}">${row.event}</td><td style="font-weight:bold;">${row.durationStr || "-"}</td><td><button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${row.id})" ${isStartRow ? 'disabled' : ''}>編集</button></td>`;
+            tr.innerHTML = `<td>${formatDate(new Date(row.timestamp), true)}</td><td class="${eventColor}">${row.event}</td><td style="font-weight:bold;">${row.durationStr || "-"}</td><td><button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${row.id})">編集</button></td>`;
             tbody.appendChild(tr);
         });
     }
@@ -878,14 +767,16 @@
         
         historicalMaxMs = 0;
         currentSessionStartTime = null;
-        updateSoraGrowth(0, 0);
+        updateSoraImage(0);
+        updateCountdown(0);
         
         location.reload(); 
     }
     
     function openEdit(id) {
         const target = soraData.find(d => d.id === id);
-        if(!target || target.event === 'SORA法開始') { alert("編集できません。"); return; }
+        if(!target) { alert("編集できません。"); return; }
+        
         document.getElementById('editId').value = target.id;
         document.getElementById('editEvent').value = target.event;
         const date = new Date(target.timestamp);
@@ -901,14 +792,26 @@
         const newTimestamp = new Date(timeInput).getTime();
         const nowMs = new Date().getTime();
         if (newTimestamp > nowMs) { alert("未来の日時は入力できません。"); return; }
-        const startEvent = soraData.find(d => d.event === 'SORA法開始');
-        if (startEvent && newTimestamp < startEvent.timestamp) { alert("SORA法開始以前の時刻は入力できません"); return; }
+        
+        // デバッグ版のためSORA法開始の編集チェックを緩める（必要であれば）
+        // ここではv5.6.1と同じく、他のイベントの場合は開始前チェックを入れる
+        const editEventVal = document.getElementById('editEvent').value;
+        if (editEventVal !== 'SORA法開始') {
+            const startEvent = soraData.find(d => d.event === 'SORA法開始');
+            if (startEvent && startEvent.id !== id && newTimestamp < startEvent.timestamp) { 
+                alert("SORA法開始以前の時刻は入力できません"); return; 
+            }
+        }
 
         const targetIndex = soraData.findIndex(d => d.id === id);
         if(targetIndex > -1) {
             soraData[targetIndex].timestamp = newTimestamp;
-            soraData[targetIndex].event = document.getElementById('editEvent').value;
+            soraData[targetIndex].event = editEventVal;
             soraData.sort((a, b) => b.timestamp - a.timestamp);
+            
+            // ★編集時もベスト時間を再計算
+            calculateBestDuration();
+            
             updateAllDisplays(); saveData(); editModalInstance.hide(); renderTable();
             if (soraData.length > 0) {
                  const latest = soraData[0];
@@ -924,6 +827,10 @@
         const id = parseInt(document.getElementById('editId').value);
         if (!confirm("本当にこの記録を削除しますか？\n（削除後は元に戻せません）")) return;
         soraData = soraData.filter(d => d.id !== id);
+        
+        // ★削除時もベスト時間を再計算
+        calculateBestDuration();
+
         updateAllDisplays(); saveData(); editModalInstance.hide(); renderTable();
         if (soraData.length > 0) {
              const latest = soraData[0];
@@ -939,7 +846,7 @@
             
             historicalMaxMs = 0;
             currentSessionStartTime = null;
-            updateSoraGrowth(0, 0);
+            updateSoraImage(0);
             updateButtonState();
         }
     }

@@ -1,5 +1,5 @@
 // sw.js
-const CACHE_NAME = 'sora-app-v0.962'; // バージョンアップ
+const CACHE_NAME = 'sora-app-v0.97'; // バージョンアップ
 
 const urlsToCache = [
     './',
